@@ -324,12 +324,13 @@ function App() {
 {/* Broadcast Footer */}
 <footer className="mt-10 border-t border-gray-200 pt-4 pb-6 text-center">
   <p className="text-sm text-gray-700 font-medium">
-    Dusk Journal • THE  KING'S HOUSEHOLD MEDIA UNIT
+    Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
   </p>
   <p className="text-xs text-gray-500 mt-1">
     v1.0 • Updates posted here
   </p>
-</footer>    </div>
+</footer>
+ </div>
   )
 }
 

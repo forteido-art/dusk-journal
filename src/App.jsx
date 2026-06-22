@@ -321,6 +321,16 @@ function App() {
           </div>
         )}
       </div>
+{/* Broadcast footer */}
+<footer className="mt-16 border-t border-pink-100 pt-6 pb-8 px-4 text-center">
+  <p className="text-xs text-gray-500">
+    <span className="font-semibold text-pink-600">Dusk Journal Note:</span>
+    {" "}Welcome to Dusk 🌙 Your entries stay private on your device.
+  </p>
+  <p className="text- text-gray-400 mt-2">
+    Updates posted here • v1.0 • Made in Lagos
+  </p>
+</footer>
     </div>
   )
 }

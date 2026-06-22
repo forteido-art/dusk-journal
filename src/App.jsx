@@ -1,248 +1,125 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 
-function App() {
-  const [entries, setEntries] = useState([])
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [view, setView] = useState('write')
-  const [editingId, setEditingId] = useState(null)
+const styles = {
+  container: {
+    minHeight: '100vh',
+    backgroundColor: '#fafafa',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    padding: '40px 20px'
+  },
+  wrapper: {
+    maxWidth: 600,
+    margin: '0 auto'
+  },
+  header: {
+    textAlign: 'center',
+    marginBottom: 40
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 700,
+    margin: 0,
+    color: '#111'
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginTop: 8
+  },
+  form: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    border: '1px solid #e5e7eb',
+    marginBottom: 30
+  },
+  input: {
+    width: '100%',
+    padding: 12,
+    fontSize: 16,
+    border: '1px solid #d1d5db',
+    borderRadius: 8,
+    marginBottom: 12,
+    boxSizing: 'border-box'
+  },
+  textarea: {
+    width: '100%',
+    padding: 12,
+    fontSize: 16,
+    border: '1px solid #d1d5db',
+    borderRadius: 8,
+    minHeight: 120,
+    boxSizing: 'border-box',
+    fontFamily: 'inherit'
+  },
+  button: {
+    marginTop: 12,
+    padding: '10px 20px',
+    backgroundColor: '#111',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontSize: 14,
+    fontWeight: 500
+  },
+  entry: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    border: '1px solid #e5e7eb',
+    marginBottom: 16
+  },
+  entryTitle: {
+    fontSize: 18,
+    fontWeight: 600,
+    margin: '0 0 8px 0',
+    color: '#111'
+  },
+  entryContent: {
+    fontSize: 14,
+    color: '#4b5563',
+    lineHeight: 1.6,
+    whiteSpace: 'pre-wrap'
+  },
+  entryDate: {
+    fontSize: 12,
+    color: '#9ca3af',
+    marginTop: 8
+  }
+};
+
+export default function App() {
+  const [entries, setEntries] = useState([]);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('dusk-entries')
-    if (saved) setEntries(JSON.parse(saved))
-  }, [])
+    const saved = localStorage.getItem('dusk-entries');
+    if (saved) setEntries(JSON.parse(saved));
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem('dusk-entries', JSON.stringify(entries))
-  }, [entries])
+    localStorage.setItem('dusk-entries', JSON.stringify(entries));
+  }, [entries]);
 
-  const saveEntry = () => {
-    if (!title.trim() ||!content.trim()) {
-      alert('Please add title and content')
-      return
-    }
+  const handleSave = () => {
+    if (!title.trim() ||!content.trim()) return;
 
     if (editingId) {
       setEntries(entries.map(e =>
-        e.id === editingId? {...e, title, content, updated: new Date().toISOString()} : e
-      ))
-      setEditingId(null)
+        e.id === editingId
+         ? {...e, title, content, updated: new Date().toISOString()}
+          : e
+      ));
+      setEditingId(null);
     } else {
-      const newEntry = {id: Date.now(), title, content, date: new Date().toISOString()}
-      setEntries([newEntry,...entries])
+      setEntries([{id: Date.now(), title, content, created: new Date().toISOString()},...entries]);
     }
-
-    setTitle('')
-    setContent('')
-    setView('archive')
-  }
-
-  const editEntry = (entry) => {
-    setTitle(entry.title)
-    setContent(entry.content)
-    setEditingId(entry.id)
-    setView('write')
-  }
-
-  const deleteEntry = (id) => {
-    if (confirm('Delete this entry?')) {
-      setEntries(entries.filter(e => e.id!== id))
-      if (editingId === id) {
-        setTitle('')
-        setContent('')
-        setEditingId(null)
-      }
-    }
-  }
-
-  const exportJSON = () => {
-    const dataStr = JSON.stringify(entries, null, 2)
-    const blob = new Blob([dataStr], {type: 'application/json'})
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `dusk-backup-${new Date().toISOString().split('T')[0]}.json`
-    link.click()
-  }
-
-  const exportPDF = () => {
-    const printWindow = window.open('', '', 'height=800,width=600')
-    const entriesHTML = entries.map(e => `
-      <div style="margin-bottom:40px; page-break-inside:avoid">
-        <h2 style="color:#d63384; margin:0 0 8px 0; font-size:22px">${e.title}</h2>
-        <p style="color:#888; font-size:13px; margin:0 0 15px 0">${new Date(e.date).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}</p>
-        <p style="white-space:pre-wrap; line-height:1.7; font-size:15px; color:#333">${e.content}</p>
-      </div>
-    `).join('')
-
-    printWindow.document.write(`
-      <html>
-        <head><title>Dusk Journal</title>
-        <style>body{font-family:-apple-system,Arial,sans-serif; padding:50px; max-width:700px; margin:0 auto}</style>
-        </head>
-        <body>
-          <h1 style="color:#d63384; text-align:center; margin-bottom:10px">Dusk Journal</h1>
-          <p style="text-align:center; color:#999; margin-bottom:50px">Exported ${new Date().toLocaleString()}</p>
-          ${entriesHTML}
-        </body>
-      </html>
-    `)
-    printWindow.document.close()
-    printWindow.focus()
-    setTimeout(() => printWindow.print(), 500)
-  }
-
-  const cancelEdit = () => {
-    setTitle('')
-    setContent('')
-    setEditingId(null)
-    setView('archive')
-  }
-
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      background: '#fff5f8',
-      padding: '24px 16px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    },
-    wrapper: {
-      maxWidth: '680px',
-      margin: '0 auto'
-    },
-    header: {
-      marginBottom: '32px',
-      textAlign: 'center'
-    },
-    title: {
-      fontSize: '32px',
-      fontWeight: '700',
-      color: '#1a1a1a',
-      margin: '0 0 8px 0',
-      letterSpacing: '-0.5px'
-    },
-    subtitle: {
-      fontSize: '15px',
-      color: '#888',
-      margin: 0
-    },
-    topBar: {
-      display: 'flex',
-      gap: '12px',
-      marginBottom: '32px'
-    },
-    tabBtn: (active) => ({
-      flex: 1,
-      padding: '14px 20px',
-      background: active? '#1a1a1a' : 'white',
-      color: active? 'white' : '#1a1a1a',
-      border: '1.5px solid #e0e0e0',
-      borderRadius: '12px',
-      fontSize: '15px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s'
-    }),
-    actionRow: {
-      display: 'flex',
-      gap: '10px',
-      marginBottom: '24px',
-      justifyContent: 'flex-end'
-    },
-    secondaryBtn: {
-      padding: '10px 18px',
-      background: 'white',
-      color: '#1a1a1a',
-      border: '1.5px solid #e0e0e0',
-      borderRadius: '10px',
-      fontSize: '14px',
-      fontWeight: '500',
-      cursor: 'pointer'
-    },
-    primaryBtn: {
-      padding: '14px 24px',
-      background: '#d63384',
-      color: 'white',
-      border: 'none',
-      borderRadius: '12px',
-      fontSize: '16px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      width: '100%',
-      marginTop: '16px'
-    },
-    input: {
-      width: '100%',
-      padding: '16px',
-      marginBottom: '16px',
-      fontSize: '16px',
-      border: '1.5px solid #e0e0e0',
-      borderRadius: '12px',
-      boxSizing: 'border-box',
-      outline: 'none',
-      background: 'white',
-      color: '#1a1a1a',
-      transition: 'border 0.2s'
-    },
-    textarea: {
-      width: '100%',
-      minHeight: '280px',
-      padding: '16px',
-      fontSize: '16px',
-      border: '1.5px solid #e0e0e0',
-      borderRadius: '12px',
-      boxSizing: 'border-box',
-      outline: 'none',
-      resize: 'vertical',
-      fontFamily: 'inherit',
-      background: 'white',
-      color: '#1a1a1a',
-      lineHeight: '1.6'
-    },
-    entryCard: {
-      background: 'white',
-      padding: '24px',
-      marginBottom: '16px',
-      borderRadius: '16px',
-      cursor: 'pointer',
-      border: '1.5px solid #f0f0f0',
-      transition: 'border 0.2s, transform 0.2s'
-    },
-    cardHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'flex-start',
-      marginBottom: '12px'
-    },
-    cardTitle: {
-      fontSize: '18px',
-      fontWeight: '600',
-      color: '#1a1a1a',
-      margin: 0,
-      flex: 1
-    },
-    cardDate: {
-      fontSize: '13px',
-      color: '#999',
-      margin: '6px 0 16px 0'
-    },
-    cardContent: {
-      fontSize: '15px',
-      color: '#555',
-      lineHeight: '1.6',
-      margin: 0
-    },
-    iconBtn: {
-      padding: '8px 12px',
-      background: 'transparent',
-      color: '#d63384',
-      border: 'none',
-      borderRadius: '8px',
-      cursor: 'pointer',
-      fontSize: '14px',
-      fontWeight: '500'
-    }
-  }
+    setTitle('');
+    setContent('');
+  };
 
   return (
     <div style={styles.container}>
@@ -252,86 +129,44 @@ function App() {
           <p style={styles.subtitle}>Your private journal</p>
         </div>
 
-        <div style={styles.topBar}>
-          <button style={styles.tabBtn(view==='write')} onClick={() => {setView('write'); setEditingId(null); setTitle(''); setContent('')}}>
-            {editingId? 'Edit Entry' : 'New Entry'}
-          </button>
-          <button style={styles.tabBtn(view==='archive')} onClick={() => setView('archive')}>
-            Archive
+        <div style={styles.form}>
+          <input
+            style={styles.input}
+            placeholder="Title"
+            value={title}
+            onChange={e => setTitle(e.target.value)}
+          />
+          <textarea
+            style={styles.textarea}
+            placeholder="Write your thoughts..."
+            value={content}
+            onChange={e => setContent(e.target.value)}
+          />
+          <button style={styles.button} onClick={handleSave}>
+            {editingId? 'Update' : 'Save Entry'}
           </button>
         </div>
 
-        {view === 'write'? (
-          <div>
-            <input
-              placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              style={styles.input}
-            />
-            <textarea
-              placeholder="Start writing..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              style={styles.textarea}
-            />
-            <div style={{display: 'flex', gap: '12px'}}>
-              <button onClick={saveEntry} style={{...styles.primaryBtn, flex: 1}}>
-                {editingId? 'Save Changes' : 'Save Entry'}
-              </button>
-              {editingId && (
-                <button onClick={cancelEdit} style={{...styles.secondaryBtn, padding: '14px 24px'}}>
-                  Cancel
-                </button>
-              )}
-            </div>
+        {entries.map(entry => (
+          <div key={entry.id} style={styles.entry}>
+            <h3 style={styles.entryTitle}>{entry.title}</h3>
+            <p style={styles.entryContent}>{entry.content}</p>
+            <p style={styles.entryDate}>
+              {new Date(entry.created).toLocaleDateString()}
+            </p>
           </div>
-        ) : (
-          <div>
-            {entries.length > 0 && (
-              <div style={styles.actionRow}>
-                <button onClick={exportJSON} style={styles.secondaryBtn}>Export JSON</button>
-                <button onClick={exportPDF} style={styles.secondaryBtn}>Export PDF</button>
-              </div>
-            )}
+        ))}
 
-            {entries.length === 0? (
-              <div style={{textAlign: 'center', padding: '80px 20px'}}>
-                <p style={{fontSize: '18px', color: '#ccc', marginBottom: '8px'}}>No entries yet</p>
-                <p style={{fontSize: '15px', color: '#999'}}>Tap "New Entry" to start writing</p>
-              </div>
-            ) : (
-              entries.map(entry => (
-                <div key={entry.id} style={styles.entryCard} onClick={() => editEntry(entry)}>
-                  <div style={styles.cardHeader}>
-                    <h3 style={styles.cardTitle}>{entry.title}</h3>
-                    <button onClick={(e) => {e.stopPropagation(); deleteEntry(entry.id)}} style={styles.iconBtn}>
-                      Delete
-                    </button>
-                  </div>
-                  <p style={styles.cardDate}>
-                    {new Date(entry.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}
-                  </p>
-                  <p style={styles.cardContent}>
-                    {entry.content.substring(0, 180)}{entry.content.length > 180? '...' : ''}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+        {/* Broadcast Footer */}
+        <div style={{borderTop: '1px solid #e5e7eb', marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center'}}>
+          <p style={{fontSize: 14, color: '#374151', fontWeight: 500, margin: 0}}>
+            Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
+          </p>
+          <p style={{fontSize: 12, color: '#6b7280', marginTop: 4}}>
+            v1.0 • Updates posted here
+          </p>
+        </div>
       </div>
-{/* Broadcast Footer */}
-<footer className="mt-10 border-t border-gray-200 pt-4 pb-6 text-center">
-  <p className="text-sm text-gray-700 font-medium">
-    Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
-  </p>
-  <p className="text-xs text-gray-500 mt-1">
-    v1.0 • Updates posted here
-  </p>
-</footer>
- </div>
+    </div>
   )
 }
-
-export default App

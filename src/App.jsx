@@ -18,13 +18,13 @@ function App() {
 
   const saveEntry = () => {
     if (!title.trim() ||!content.trim()) {
-      alert('Add both title and content')
+      alert('Please add title and content')
       return
     }
 
     if (editingId) {
       setEntries(entries.map(e =>
-        e.id === editingId? {...e, title, content, date: new Date().toISOString()} : e
+        e.id === editingId? {...e, title, content, updated: new Date().toISOString()} : e
       ))
       setEditingId(null)
     } else {
@@ -68,20 +68,21 @@ function App() {
   const exportPDF = () => {
     const printWindow = window.open('', '', 'height=800,width=600')
     const entriesHTML = entries.map(e => `
-      <div style="margin-bottom:30px; page-break-inside:avoid">
-        <h2 style="color:#d63384; margin-bottom:5px">${e.title}</h2>
-        <p style="color:#666; font-size:12px; margin-bottom:10px">${new Date(e.date).toLocaleString()}</p>
-        <p style="white-space:pre-wrap; line-height:1.6">${e.content}</p>
-        <hr style="border:none; border-top:1px solid #eee; margin-top:20px">
+      <div style="margin-bottom:40px; page-break-inside:avoid">
+        <h2 style="color:#d63384; margin:0 0 8px 0; font-size:22px">${e.title}</h2>
+        <p style="color:#888; font-size:13px; margin:0 0 15px 0">${new Date(e.date).toLocaleDateString('en-US', {month: 'long', day: 'numeric', year: 'numeric'})}</p>
+        <p style="white-space:pre-wrap; line-height:1.7; font-size:15px; color:#333">${e.content}</p>
       </div>
     `).join('')
 
     printWindow.document.write(`
       <html>
-        <head><title>Dusk Journal Backup</title></head>
-        <body style="font-family:Arial; padding:30px; color:black">
-          <h1 style="color:#d63384; text-align:center">Dusk Journal Export</h1>
-          <p style="text-align:center; color:#666">Exported on ${new Date().toLocaleString()}</p>
+        <head><title>Dusk Journal</title>
+        <style>body{font-family:-apple-system,Arial,sans-serif; padding:50px; max-width:700px; margin:0 auto}</style>
+        </head>
+        <body>
+          <h1 style="color:#d63384; text-align:center; margin-bottom:10px">Dusk Journal</h1>
+          <p style="text-align:center; color:#999; margin-bottom:50px">Exported ${new Date().toLocaleString()}</p>
           ${entriesHTML}
         </body>
       </html>
@@ -101,153 +102,185 @@ function App() {
   const styles = {
     container: {
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)',
-      padding: '20px',
+      background: '#fff5f8',
+      padding: '24px 16px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     },
-    card: {
-      maxWidth: '600px',
-      margin: '0 auto',
-      background: 'white',
-      borderRadius: '20px',
-      padding: '25px',
-      boxShadow: '0 20px 60px rgba(255,105,180,0.2)'
+    wrapper: {
+      maxWidth: '680px',
+      margin: '0 auto'
+    },
+    header: {
+      marginBottom: '32px',
+      textAlign: 'center'
     },
     title: {
-      textAlign: 'center',
-      color: '#d63384',
-      marginBottom: '25px',
-      fontSize: '28px'
+      fontSize: '32px',
+      fontWeight: '700',
+      color: '#1a1a1a',
+      margin: '0 0 8px 0',
+      letterSpacing: '-0.5px'
     },
-    btnGroup: {
+    subtitle: {
+      fontSize: '15px',
+      color: '#888',
+      margin: 0
+    },
+    topBar: {
+      display: 'flex',
+      gap: '12px',
+      marginBottom: '32px'
+    },
+    tabBtn: (active) => ({
+      flex: 1,
+      padding: '14px 20px',
+      background: active? '#1a1a1a' : 'white',
+      color: active? 'white' : '#1a1a1a',
+      border: '1.5px solid #e0e0e0',
+      borderRadius: '12px',
+      fontSize: '15px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.2s'
+    }),
+    actionRow: {
       display: 'flex',
       gap: '10px',
-      marginBottom: '20px'
+      marginBottom: '24px',
+      justifyContent: 'flex-end'
     },
-    btn: (active) => ({
-      flex: 1,
-      padding: '12px',
-      background: active? 'linear-gradient(135deg, #ff6b9d 0%, #d63384 100%)' : '#fff0f5',
-      color: active? 'white' : '#d63384',
-      border: '2px solid #ffb6c1',
+    secondaryBtn: {
+      padding: '10px 18px',
+      background: 'white',
+      color: '#1a1a1a',
+      border: '1.5px solid #e0e0e0',
+      borderRadius: '10px',
+      fontSize: '14px',
+      fontWeight: '500',
+      cursor: 'pointer'
+    },
+    primaryBtn: {
+      padding: '14px 24px',
+      background: '#d63384',
+      color: 'white',
+      border: 'none',
       borderRadius: '12px',
       fontSize: '16px',
       fontWeight: '600',
-      cursor: 'pointer'
-    }),
+      cursor: 'pointer',
+      width: '100%',
+      marginTop: '16px'
+    },
     input: {
       width: '100%',
-      padding: '14px',
-      marginBottom: '12px',
+      padding: '16px',
+      marginBottom: '16px',
       fontSize: '16px',
-      border: '2px solid #ffb6c1',
+      border: '1.5px solid #e0e0e0',
       borderRadius: '12px',
       boxSizing: 'border-box',
       outline: 'none',
       background: 'white',
-      color: 'black'
+      color: '#1a1a1a',
+      transition: 'border 0.2s'
     },
     textarea: {
       width: '100%',
-      height: '200px',
-      padding: '14px',
+      minHeight: '280px',
+      padding: '16px',
       fontSize: '16px',
-      border: '2px solid #ffb6c1',
+      border: '1.5px solid #e0e0e0',
       borderRadius: '12px',
       boxSizing: 'border-box',
       outline: 'none',
       resize: 'vertical',
       fontFamily: 'inherit',
       background: 'white',
-      color: 'black'
-    },
-    saveBtn: {
-      width: '100%',
-      padding: '14px',
-      background: 'linear-gradient(135deg, #ff6b9d 0%, #d63384 100%)',
-      color: 'white',
-      border: 'none',
-      borderRadius: '12px',
-      fontSize: '16px',
-      fontWeight: '600',
-      marginTop: '12px',
-      cursor: 'pointer'
-    },
-    cancelBtn: {
-      padding: '14px',
-      background: '#ccc',
-      color: 'black',
-      border: 'none',
-      borderRadius: '12px',
-      fontSize: '16px',
-      fontWeight: '600',
-      marginTop: '12px',
-      cursor: 'pointer'
+      color: '#1a1a1a',
+      lineHeight: '1.6'
     },
     entryCard: {
       background: 'white',
-      padding: '18px',
-      marginBottom: '12px',
-      borderRadius: '15px',
+      padding: '24px',
+      marginBottom: '16px',
+      borderRadius: '16px',
       cursor: 'pointer',
-      border: '2px solid #ffb6c1',
-      color: 'black'
+      border: '1.5px solid #f0f0f0',
+      transition: 'border 0.2s, transform 0.2s'
     },
-    deleteBtn: {
-      padding: '6px 12px',
-      background: '#ff4757',
-      color: 'white',
+    cardHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: '12px'
+    },
+    cardTitle: {
+      fontSize: '18px',
+      fontWeight: '600',
+      color: '#1a1a1a',
+      margin: 0,
+      flex: 1
+    },
+    cardDate: {
+      fontSize: '13px',
+      color: '#999',
+      margin: '6px 0 16px 0'
+    },
+    cardContent: {
+      fontSize: '15px',
+      color: '#555',
+      lineHeight: '1.6',
+      margin: 0
+    },
+    iconBtn: {
+      padding: '8px 12px',
+      background: 'transparent',
+      color: '#d63384',
       border: 'none',
       borderRadius: '8px',
       cursor: 'pointer',
-      fontSize: '14px'
-    },
-    exportBtn: {
-      padding: '10px 16px',
-      background: 'linear-gradient(135deg, #ff6b9d 0%, #d63384 100%)',
-      color: 'white',
-      border: 'none',
-      borderRadius: '10px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      marginLeft: '8px'
+      fontSize: '14px',
+      fontWeight: '500'
     }
   }
 
   return (
     <div style={styles.container}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>Dusk Journal</h1>
+      <div style={styles.wrapper}>
+        <div style={styles.header}>
+          <h1 style={styles.title}>Dusk</h1>
+          <p style={styles.subtitle}>Your private journal</p>
+        </div>
 
-        <div style={styles.btnGroup}>
-          <button style={styles.btn(view==='write')} onClick={() => {setView('write'); setEditingId(null); setTitle(''); setContent('')}}>
-            {editingId? '✏️ Edit' : '✨ New Entry'}
+        <div style={styles.topBar}>
+          <button style={styles.tabBtn(view==='write')} onClick={() => {setView('write'); setEditingId(null); setTitle(''); setContent('')}}>
+            {editingId? 'Edit Entry' : 'New Entry'}
           </button>
-          <button style={styles.btn(view==='archive')} onClick={() => setView('archive')}>
-            📚 Archive ({entries.length})
+          <button style={styles.tabBtn(view==='archive')} onClick={() => setView('archive')}>
+            Archive
           </button>
         </div>
 
         {view === 'write'? (
           <div>
             <input
-              placeholder="Entry title..."
+              placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               style={styles.input}
             />
             <textarea
-              placeholder="What's on your mind?"
+              placeholder="Start writing..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               style={styles.textarea}
             />
-            <div style={{display: 'flex', gap: '10px'}}>
-              <button onClick={saveEntry} style={{...styles.saveBtn, flex: 1}}>
-                {editingId? '💾 Update Entry' : '💾 Save Entry'}
+            <div style={{display: 'flex', gap: '12px'}}>
+              <button onClick={saveEntry} style={{...styles.primaryBtn, flex: 1}}>
+                {editingId? 'Save Changes' : 'Save Entry'}
               </button>
               {editingId && (
-                <button onClick={cancelEdit} style={styles.cancelBtn}>
+                <button onClick={cancelEdit} style={{...styles.secondaryBtn, padding: '14px 24px'}}>
                   Cancel
                 </button>
               )}
@@ -255,33 +288,33 @@ function App() {
           </div>
         ) : (
           <div>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-              <h2 style={{margin: 0, color: '#d63384'}}>Archive</h2>
-              {entries.length > 0 && (
-                <div>
-                  <button onClick={exportJSON} style={styles.exportBtn}>📥 JSON</button>
-                  <button onClick={exportPDF} style={styles.exportBtn}>📄 PDF</button>
-                </div>
-              )}
-            </div>
+            {entries.length > 0 && (
+              <div style={styles.actionRow}>
+                <button onClick={exportJSON} style={styles.secondaryBtn}>Export JSON</button>
+                <button onClick={exportPDF} style={styles.secondaryBtn}>Export PDF</button>
+              </div>
+            )}
 
             {entries.length === 0? (
-              <p style={{textAlign: 'center', color: '#d63384', marginTop: '60px', fontSize: '18px'}}>No entries yet. Write your first one! ✨</p>
+              <div style={{textAlign: 'center', padding: '80px 20px'}}>
+                <p style={{fontSize: '18px', color: '#ccc', marginBottom: '8px'}}>No entries yet</p>
+                <p style={{fontSize: '15px', color: '#999'}}>Tap "New Entry" to start writing</p>
+              </div>
             ) : (
               entries.map(entry => (
                 <div key={entry.id} style={styles.entryCard} onClick={() => editEntry(entry)}>
-                  <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start'}}>
-                    <div style={{flex: 1}}>
-                      <h3 style={{margin: '0 0 8px 0', color: 'black'}}>{entry.title}</h3>
-                      <p style={{color: '#666', fontSize: '13px', margin: '0 0 10px 0'}}>
-                        {new Date(entry.date).toLocaleString()}
-                      </p>
-                      <p style={{margin: 0, color: 'black', whiteSpace: 'pre-wrap', lineHeight: '1.5'}}>{entry.content.substring(0, 120)}{entry.content.length > 120? '...' : ''}</p>
-                    </div>
-                    <button onClick={(e) => {e.stopPropagation(); deleteEntry(entry.id)}} style={styles.deleteBtn}>
-                      🗑️
+                  <div style={styles.cardHeader}>
+                    <h3 style={styles.cardTitle}>{entry.title}</h3>
+                    <button onClick={(e) => {e.stopPropagation(); deleteEntry(entry.id)}} style={styles.iconBtn}>
+                      Delete
                     </button>
                   </div>
+                  <p style={styles.cardDate}>
+                    {new Date(entry.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'})}
+                  </p>
+                  <p style={styles.cardContent}>
+                    {entry.content.substring(0, 180)}{entry.content.length > 180? '...' : ''}
+                  </p>
                 </div>
               ))
             )}

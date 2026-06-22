@@ -65,6 +65,32 @@ function App() {
     link.click()
   }
 
+  const exportPDF = () => {
+    const printWindow = window.open('', '', 'height=800,width=600')
+    const entriesHTML = entries.map(e => `
+      <div style="margin-bottom:30px; page-break-inside:avoid">
+        <h2 style="color:#d63384; margin-bottom:5px">${e.title}</h2>
+        <p style="color:#666; font-size:12px; margin-bottom:10px">${new Date(e.date).toLocaleString()}</p>
+        <p style="white-space:pre-wrap; line-height:1.6">${e.content}</p>
+        <hr style="border:none; border-top:1px solid #eee; margin-top:20px">
+      </div>
+    `).join('')
+
+    printWindow.document.write(`
+      <html>
+        <head><title>Dusk Journal Backup</title></head>
+        <body style="font-family:Arial; padding:30px; color:black">
+          <h1 style="color:#d63384; text-align:center">Dusk Journal Export</h1>
+          <p style="text-align:center; color:#666">Exported on ${new Date().toLocaleString()}</p>
+          ${entriesHTML}
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    setTimeout(() => printWindow.print(), 500)
+  }
+
   const cancelEdit = () => {
     setTitle('')
     setContent('')
@@ -75,7 +101,7 @@ function App() {
   const styles = {
     container: {
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)',
       padding: '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     },
@@ -85,11 +111,11 @@ function App() {
       background: 'white',
       borderRadius: '20px',
       padding: '25px',
-      boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+      boxShadow: '0 20px 60px rgba(255,105,180,0.2)'
     },
     title: {
       textAlign: 'center',
-      color: '#667eea',
+      color: '#d63384',
       marginBottom: '25px',
       fontSize: '28px'
     },
@@ -101,9 +127,9 @@ function App() {
     btn: (active) => ({
       flex: 1,
       padding: '12px',
-      background: active? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#f0f0f0',
-      color: active? 'white' : '#333',
-      border: 'none',
+      background: active? 'linear-gradient(135deg, #ff6b9d 0%, #d63384 100%)' : '#fff0f5',
+      color: active? 'white' : '#d63384',
+      border: '2px solid #ffb6c1',
       borderRadius: '12px',
       fontSize: '16px',
       fontWeight: '600',
@@ -114,27 +140,31 @@ function App() {
       padding: '14px',
       marginBottom: '12px',
       fontSize: '16px',
-      border: '2px solid #e0e0e0',
+      border: '2px solid #ffb6c1',
       borderRadius: '12px',
       boxSizing: 'border-box',
-      outline: 'none'
+      outline: 'none',
+      background: 'white',
+      color: 'black'
     },
     textarea: {
       width: '100%',
       height: '200px',
       padding: '14px',
       fontSize: '16px',
-      border: '2px solid #e0e0e0',
+      border: '2px solid #ffb6c1',
       borderRadius: '12px',
       boxSizing: 'border-box',
       outline: 'none',
       resize: 'vertical',
-      fontFamily: 'inherit'
+      fontFamily: 'inherit',
+      background: 'white',
+      color: 'black'
     },
     saveBtn: {
       width: '100%',
       padding: '14px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg, #ff6b9d 0%, #d63384 100%)',
       color: 'white',
       border: 'none',
       borderRadius: '12px',
@@ -145,8 +175,8 @@ function App() {
     },
     cancelBtn: {
       padding: '14px',
-      background: '#999',
-      color: 'white',
+      background: '#ccc',
+      color: 'black',
       border: 'none',
       borderRadius: '12px',
       fontSize: '16px',
@@ -155,12 +185,13 @@ function App() {
       cursor: 'pointer'
     },
     entryCard: {
-      background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+      background: 'white',
       padding: '18px',
       marginBottom: '12px',
       borderRadius: '15px',
       cursor: 'pointer',
-      border: '2px solid transparent'
+      border: '2px solid #ffb6c1',
+      color: 'black'
     },
     deleteBtn: {
       padding: '6px 12px',
@@ -173,12 +204,13 @@ function App() {
     },
     exportBtn: {
       padding: '10px 16px',
-      background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+      background: 'linear-gradient(135deg, #ff6b9d 0%, #d63384 100%)',
       color: 'white',
       border: 'none',
       borderRadius: '10px',
       fontWeight: '600',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      marginLeft: '8px'
     }
   }
 
@@ -224,26 +256,27 @@ function App() {
         ) : (
           <div>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
-              <h2 style={{margin: 0, color: '#333'}}>Archive</h2>
+              <h2 style={{margin: 0, color: '#d63384'}}>Archive</h2>
               {entries.length > 0 && (
-                <button onClick={exportJSON} style={styles.exportBtn}>
-                  📥 Export JSON
-                </button>
+                <div>
+                  <button onClick={exportJSON} style={styles.exportBtn}>📥 JSON</button>
+                  <button onClick={exportPDF} style={styles.exportBtn}>📄 PDF</button>
+                </div>
               )}
             </div>
 
             {entries.length === 0? (
-              <p style={{textAlign: 'center', color: '#999', marginTop: '60px', fontSize: '18px'}}>No entries yet. Write your first one! ✨</p>
+              <p style={{textAlign: 'center', color: '#d63384', marginTop: '60px', fontSize: '18px'}}>No entries yet. Write your first one! ✨</p>
             ) : (
               entries.map(entry => (
                 <div key={entry.id} style={styles.entryCard} onClick={() => editEntry(entry)}>
                   <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start'}}>
                     <div style={{flex: 1}}>
-                      <h3 style={{margin: '0 0 8px 0', color: '#333'}}>{entry.title}</h3>
+                      <h3 style={{margin: '0 0 8px 0', color: 'black'}}>{entry.title}</h3>
                       <p style={{color: '#666', fontSize: '13px', margin: '0 0 10px 0'}}>
                         {new Date(entry.date).toLocaleString()}
                       </p>
-                      <p style={{margin: 0, color: '#444', whiteSpace: 'pre-wrap', lineHeight: '1.5'}}>{entry.content.substring(0, 120)}{entry.content.length > 120? '...' : ''}</p>
+                      <p style={{margin: 0, color: 'black', whiteSpace: 'pre-wrap', lineHeight: '1.5'}}>{entry.content.substring(0, 120)}{entry.content.length > 120? '...' : ''}</p>
                     </div>
                     <button onClick={(e) => {e.stopPropagation(); deleteEntry(entry.id)}} style={styles.deleteBtn}>
                       🗑️

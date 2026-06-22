@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const styles = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#fafafa',
+    backgroundColor: '#fdf2f8',
     fontFamily: 'system-ui, -apple-system, sans-serif',
     padding: '40px 20px'
   },
@@ -19,25 +19,25 @@ const styles = {
     fontSize: 32,
     fontWeight: 700,
     margin: 0,
-    color: '#111'
+    color: '#be185d'
   },
   subtitle: {
     fontSize: 14,
-    color: '#6b7280',
+    color: '#9d174d',
     marginTop: 8
   },
   form: {
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
-    border: '1px solid #e5e7eb',
+    border: '1px solid #fbcfe8',
     marginBottom: 30
   },
   input: {
     width: '100%',
     padding: 12,
     fontSize: 16,
-    border: '1px solid #d1d5db',
+    border: '1px solid #f9a8d4',
     borderRadius: 8,
     marginBottom: 12,
     boxSizing: 'border-box'
@@ -46,7 +46,7 @@ const styles = {
     width: '100%',
     padding: 12,
     fontSize: 16,
-    border: '1px solid #d1d5db',
+    border: '1px solid #f9a8d4',
     borderRadius: 8,
     minHeight: 120,
     boxSizing: 'border-box',
@@ -55,7 +55,7 @@ const styles = {
   button: {
     marginTop: 12,
     padding: '10px 20px',
-    backgroundColor: '#111',
+    backgroundColor: '#ec4899',
     color: '#fff',
     border: 'none',
     borderRadius: 8,
@@ -67,14 +67,14 @@ const styles = {
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
-    border: '1px solid #e5e7eb',
+    border: '1px solid #fbcfe8',
     marginBottom: 16
   },
   entryTitle: {
     fontSize: 18,
     fontWeight: 600,
     margin: '0 0 8px 0',
-    color: '#111'
+    color: '#be185d'
   },
   entryContent: {
     fontSize: 14,
@@ -157,12 +157,12 @@ export default function App() {
           </div>
         ))}
 
-        {/* Broadcast Footer */}
-        <div style={{borderTop: '1px solid #e5e7eb', marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center'}}>
-          <p style={{fontSize: 14, color: '#374151', fontWeight: 500, margin: 0}}>
+        {/* Broadcast Footer - Pink Theme */}
+        <div style={{borderTop: '1px solid #fbcfe8', marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center'}}>
+          <p style={{fontSize: 14, color: '#be185d', fontWeight: 500, margin: 0}}>
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
-          <p style={{fontSize: 12, color: '#6b7280', marginTop: 4}}>
+          <p style={{fontSize: 12, color: '#9d174d', marginTop: 4}}>
             v1.0 • Updates posted here
           </p>
         </div>

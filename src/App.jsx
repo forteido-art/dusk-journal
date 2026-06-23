@@ -179,13 +179,17 @@ export default function App() {
   const [sortOrder, setSortOrder] = useState('newest');
   const [customTags, setCustomTags] = useState(['Visions', 'Bible Study', 'Work', 'Family']);
 
-  // PIN Lock - enforced on every load
+  // Auto-save + draft indicator
+  const [currentDraftId, setCurrentDraftId] = useState(null);
+  const [saveStatus, setSaveStatus] = useState('');
+  const [saveTime, setSaveTime] = useState('');
+
+  // PIN Lock
   const [isLocked, setIsLocked] = useState(true);
   const [pinInput, setPinInput] = useState('');
   const storedPin = localStorage.getItem('dusk-pin');
 
   useEffect(() => {
-    // Load data only after unlock
     if (!isLocked) {
       const saved = localStorage.getItem('dusk-entries');
       if (saved) setEntries(JSON.parse(saved));
@@ -207,15 +211,12 @@ export default function App() {
     }
   }, [customTags, isLocked]);
 
-  // 7pm Daily Reminder
+  // 7pm Daily Reminder - user-triggered permission
   useEffect(() => {
-    if (!('Notification' in window)) return;
-
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-
     const scheduleReminder = () => {
+      if (!('Notification' in window)) return;
+      if (Notification.permission!== 'granted') return;
+
       const now = new Date();
       const reminderTime = new Date();
       reminderTime.setHours(19, 0, 0, 0); // 7pm WAT
@@ -227,12 +228,10 @@ export default function App() {
       const timeUntilReminder = reminderTime.getTime() - now.getTime();
 
       setTimeout(() => {
-        if (Notification.permission === 'granted') {
-          new Notification('Dusk Journal', {
-            body: 'Time to reflect. Open Dusk and write your thoughts for today.',
-            icon: '/favicon.ico'
-          });
-        }
+        new Notification('Dusk Journal', {
+          body: 'Time to reflect. Open Dusk and write your thoughts for today.',
+          icon: '/favicon.ico'
+        });
         scheduleReminder();
       }, timeUntilReminder);
     };
@@ -240,22 +239,86 @@ export default function App() {
     scheduleReminder();
   }, []);
 
-  useEffect(() => {
-    const autoSave = () => {
-      if (!isLocked && (title.trim() || content.trim())) {
-        handleSave(true);
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      alert('Notifications not supported on this browser');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      alert('7pm reminder enabled! You will get a notification daily at 7pm.');
+      window.location.reload();
+    } else {
+      alert('Permission denied. You can enable it later in browser settings.');
+    }
+  };
+
+  // Auto-save: starts on first keystroke, updates same entry
+  const handleSave = (isAutoSave = false) => {
+    if (!title.trim() &&!content.trim()) return;
+
+    setEntries(prev => {
+      if (currentDraftId) {
+        return prev.map(e =>
+          e.id === currentDraftId
+           ? {...e, title, content, tags, updated: new Date().toISOString() }
+            : e
+        );
       }
-    };
+
+      const newEntry = {
+        id: Date.now(),
+        title,
+        content,
+        tags,
+        archived: false,
+        created: new Date().toISOString()
+      };
+      setCurrentDraftId(newEntry.id);
+      return [newEntry,...prev];
+    });
+
+    if (isAutoSave) {
+      setSaveStatus('saving');
+      setTimeout(() => {
+        setSaveStatus('saved');
+        setSaveTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        setTimeout(() => setSaveStatus(''), 3000);
+      }, 300);
+    } else {
+      setTitle('');
+      setContent('');
+      setTags([]);
+      setCurrentDraftId(null);
+      setSaveStatus('');
+    }
+  };
+
+  // Debounced auto-save on typing
+  useEffect(() => {
+    if (!title.trim() &&!content.trim()) return;
+
+    const timer = setTimeout(() => {
+      handleSave(true);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [title, content, tags]);
+
+  // Auto-save on tab switch/refresh
+  useEffect(() => {
+    const autoSave = () => handleSave(true);
     window.addEventListener('beforeunload', autoSave);
     const handleVisibility = () => {
       if (document.visibilityState === 'hidden') autoSave();
     };
-    window.addEventListener('visibilitychange', handleVisibility);
+    document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       window.removeEventListener('beforeunload', autoSave);
-      window.removeEventListener('visibilitychange', handleVisibility);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [title, content, editingId, entries, tags, isLocked]);
+  }, [title, content, tags, currentDraftId]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -275,12 +338,10 @@ export default function App() {
     }
 
     if (!storedPin) {
-      // First time - set PIN
       localStorage.setItem('dusk-pin', pinInput);
       setIsLocked(false);
       setPinInput('');
     } else {
-      // Unlock
       if (pinInput === storedPin) {
         setIsLocked(false);
         setPinInput('');
@@ -297,6 +358,7 @@ export default function App() {
     setTitle('');
     setContent('');
     setTags([]);
+    setCurrentDraftId(null);
     setEditingId(null);
     setView('journal');
     setSelectedEntry(null);
@@ -317,30 +379,11 @@ export default function App() {
     setTags(tags.filter(t => t!== tag));
   };
 
-  const handleSave = (silent = false) => {
-    if (!title.trim() ||!content.trim()) return;
-
-    if (editingId) {
-      setEntries(entries.map(e =>
-        e.id === editingId
-         ? {...e, title, content, tags, updated: new Date().toISOString() }
-          : e
-      ));
-      setEditingId(null);
-    } else {
-      setEntries([{ id: Date.now(), title, content, tags, archived: false, created: new Date().toISOString() },...entries]);
-    }
-    if (!silent) {
-      setTitle('');
-      setContent('');
-      setTags([]);
-    }
-  };
-
   const handleEdit = (entry) => {
     setTitle(entry.title);
     setContent(entry.content);
     setTags(entry.tags || []);
+    setCurrentDraftId(entry.id);
     setEditingId(entry.id);
     setView('journal');
     setSelectedEntry(null);
@@ -351,6 +394,12 @@ export default function App() {
     if (window.confirm('Delete this entry permanently?')) {
       setEntries(entries.filter(e => e.id!== id));
       if (selectedEntry?.id === id) setSelectedEntry(null);
+      if (currentDraftId === id) {
+        setTitle('');
+        setContent('');
+        setTags([]);
+        setCurrentDraftId(null);
+      }
     }
   };
 
@@ -412,7 +461,7 @@ export default function App() {
   const journalEntries = filterEntries(entries.filter(e =>!e.archived));
   const archivedEntries = filterEntries(entries.filter(e => e.archived));
 
-  // PIN Lock Screen - shows before anything else
+  // PIN Lock Screen
   if (isLocked) {
     return (
       <div style={styles.lockScreen}>
@@ -475,7 +524,7 @@ export default function App() {
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
             </p>
             <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-              v2.1 • Updates posted here
+              v2.3 • Updates posted here
             </p>
           </div>
         </div>
@@ -486,7 +535,10 @@ export default function App() {
   return (
     <div style={styles.container}>
       <div style={styles.wrapper}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <button style={styles.buttonSecondary} onClick={requestNotificationPermission}>
+            {Notification.permission === 'granted'? '✓ Reminder On' : 'Enable 7pm Reminder'}
+          </button>
           <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
         </div>
 
@@ -599,17 +651,37 @@ export default function App() {
                 value={content}
                 onChange={e => setContent(e.target.value)}
               />
-              <button style={styles.button} onClick={() => handleSave()}>
-                {editingId? 'Update Entry' : 'Save Entry'}
-              </button>
-              {editingId && (
-                <button
-                  style={{...styles.button,...styles.buttonSecondary }}
-                  onClick={() => { setEditingId(null); setTitle(''); setContent(''); setTags([]); }}
-                >
-                  Cancel
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
+                <button style={styles.button} onClick={() => handleSave(false)}>
+                  {editingId? 'Update Entry' : 'Save Entry'}
                 </button>
-              )}
+
+                {saveStatus === 'saving' && (
+                  <span style={{ fontSize: 12, color: '#9d174d' }}>Saving...</span>
+                )}
+                {saveStatus === 'saved' && (
+                  <span style={{ fontSize: 12, color: '#16a34a' }}>
+                    Draft saved • {saveTime}
+                  </span>
+                )}
+
+                {editingId && (
+                  <button
+                    style={{...styles.button,...styles.buttonSecondary }}
+                    onClick={() => {
+                      setEditingId(null);
+                      setTitle('');
+                      setContent('');
+                      setTags([]);
+                      setCurrentDraftId(null);
+                      setSaveStatus('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
             </div>
 
             {journalEntries.length === 0? (
@@ -690,7 +762,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-            v2.1 • The King's Household Church | forteido@gmail.com
+            v2.3 • Updates posted here
           </p>
         </div>
       </div>

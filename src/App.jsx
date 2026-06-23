@@ -98,4 +98,59 @@ const styles = {
   entry: {
     backgroundColor: '#fff',
     padding: 20,
-    border
+    borderRadius: 12,
+    border: '1px solid #fbcfe8',
+    marginBottom: 16
+  },
+  entryTitle: {
+    fontSize: 18,
+    fontWeight: 600,
+    margin: '0 0 8px 0',
+    color: '#be185d',
+    cursor: 'pointer'
+  },
+  entryContent: {
+    fontSize: 14,
+    color: '#000',
+    lineHeight: 1.6,
+    whiteSpace: 'pre-wrap'
+  },
+  entryDate: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 8
+  },
+  entryActions: {
+    marginTop: 12,
+    display: 'flex',
+    gap: 8,
+    flexWrap: 'wrap'
+  },
+  offlineBanner: {
+    backgroundColor: '#fef3c7',
+    color: '#92400e',
+    padding: '10px 16px',
+    borderRadius: 8,
+    marginBottom: 20,
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: 500,
+    border: '1px solid #fcd34a'
+  }
+};
+
+export default function App() {
+  const [entries, setEntries] = useState([]);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [view, setView] = useState('journal');
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('dusk-entries');
+    if (saved) setEntries(JSON.parse(saved));
+  }, []);
+
+ 

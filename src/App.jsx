@@ -98,28 +98,4 @@ const styles = {
   entry: {
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 12,
-    border: '1px solid #fbcfe8',
-    marginBottom: 16
-  },
-  entryTitle: {
-    fontSize: 18,
-    fontWeight: 600,
-    margin: '0 0 8px 0',
-    color: '#be185d',
-    cursor: 'pointer'
-  },
-  entryContent: {
-    fontSize: 14,
-    color: '#000',
-    lineHeight: 1.6,
-    whiteSpace: 'pre-wrap'
-  },
-  entryDate: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginTop: 8
-  },
-  entryActions: {
-    marginTop: 12,
-    display: '
+    border

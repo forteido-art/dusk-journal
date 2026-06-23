@@ -179,12 +179,10 @@ export default function App() {
   const [sortOrder, setSortOrder] = useState('newest');
   const [customTags, setCustomTags] = useState(['Visions', 'Bible Study', 'Work', 'Family']);
 
-  // Auto-save + draft indicator
   const [currentDraftId, setCurrentDraftId] = useState(null);
   const [saveStatus, setSaveStatus] = useState('');
   const [saveTime, setSaveTime] = useState('');
 
-  // PIN Lock
   const [isLocked, setIsLocked] = useState(true);
   const [pinInput, setPinInput] = useState('');
   const storedPin = localStorage.getItem('dusk-pin');
@@ -193,40 +191,28 @@ export default function App() {
     if (!isLocked) {
       const saved = localStorage.getItem('dusk-entries');
       if (saved) setEntries(JSON.parse(saved));
-
       const savedTags = localStorage.getItem('dusk-tags');
       if (savedTags) setCustomTags(JSON.parse(savedTags));
     }
   }, [isLocked]);
 
   useEffect(() => {
-    if (!isLocked) {
-      localStorage.setItem('dusk-entries', JSON.stringify(entries));
-    }
+    if (!isLocked) localStorage.setItem('dusk-entries', JSON.stringify(entries));
   }, [entries, isLocked]);
 
   useEffect(() => {
-    if (!isLocked) {
-      localStorage.setItem('dusk-tags', JSON.stringify(customTags));
-    }
+    if (!isLocked) localStorage.setItem('dusk-tags', JSON.stringify(customTags));
   }, [customTags, isLocked]);
 
-  // 7pm Daily Reminder - user-triggered permission
   useEffect(() => {
     const scheduleReminder = () => {
       if (!('Notification' in window)) return;
       if (Notification.permission!== 'granted') return;
-
       const now = new Date();
       const reminderTime = new Date();
-      reminderTime.setHours(19, 0, 0, 0); // 7pm WAT
-
-      if (reminderTime < now) {
-        reminderTime.setDate(reminderTime.getDate() + 1);
-      }
-
+      reminderTime.setHours(19, 0, 0, 0);
+      if (reminderTime < now) reminderTime.setDate(reminderTime.getDate() + 1);
       const timeUntilReminder = reminderTime.getTime() - now.getTime();
-
       setTimeout(() => {
         new Notification('Dusk Journal', {
           body: 'Time to reflect. Open Dusk and write your thoughts for today.',
@@ -235,7 +221,6 @@ export default function App() {
         scheduleReminder();
       }, timeUntilReminder);
     };
-
     scheduleReminder();
   }, []);
 
@@ -244,7 +229,6 @@ export default function App() {
       alert('Notifications not supported on this browser');
       return;
     }
-
     const permission = await Notification.requestPermission();
     if (permission === 'granted') {
       alert('7pm reminder enabled! You will get a notification daily at 7pm.');
@@ -254,10 +238,8 @@ export default function App() {
     }
   };
 
-  // Auto-save: starts on first keystroke, updates same entry
   const handleSave = (isAutoSave = false) => {
     if (!title.trim() &&!content.trim()) return;
-
     setEntries(prev => {
       if (currentDraftId) {
         return prev.map(e =>
@@ -266,7 +248,6 @@ export default function App() {
             : e
         );
       }
-
       const newEntry = {
         id: Date.now(),
         title,
@@ -295,18 +276,14 @@ export default function App() {
     }
   };
 
-  // Debounced auto-save on typing
   useEffect(() => {
     if (!title.trim() &&!content.trim()) return;
-
     const timer = setTimeout(() => {
       handleSave(true);
     }, 1000);
-
     return () => clearTimeout(timer);
   }, [title, content, tags]);
 
-  // Auto-save on tab switch/refresh
   useEffect(() => {
     const autoSave = () => handleSave(true);
     window.addEventListener('beforeunload', autoSave);
@@ -336,7 +313,6 @@ export default function App() {
       alert('PIN must be 4 digits');
       return;
     }
-
     if (!storedPin) {
       localStorage.setItem('dusk-pin', pinInput);
       setIsLocked(false);
@@ -434,9 +410,41 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // JSON BACKUP + RESTORE - NEW v2.4
+  const exportJSON = () => {
+    const dataStr = JSON.stringify(entries, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `dusk-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    alert('Backup downloaded! Save it to Google Drive or WhatsApp.');
+  };
+
+  const importJSON = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target.result);
+        if (Array.isArray(imported) && window.confirm(`Import ${imported.length} entries? This will replace current entries.`)) {
+          setEntries(imported);
+          alert('Backup restored successfully!');
+        }
+      } catch (err) {
+        alert('Invalid backup file');
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const filterEntries = (entryList) => {
     let filtered = entryList;
-
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(e => {
@@ -448,20 +456,17 @@ export default function App() {
         return titleMatch || contentMatch || dateMatch || tagMatch;
       });
     }
-
     filtered.sort((a, b) => {
       const dateA = new Date(a.created);
       const dateB = new Date(b.created);
       return sortOrder === 'newest'? dateB - dateA : dateA - dateB;
     });
-
     return filtered;
   };
 
   const journalEntries = filterEntries(entries.filter(e =>!e.archived));
   const archivedEntries = filterEntries(entries.filter(e => e.archived));
 
-  // PIN Lock Screen
   if (isLocked) {
     return (
       <div style={styles.lockScreen}>
@@ -498,7 +503,6 @@ export default function App() {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
             <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
           </div>
-
           <div style={styles.entry}>
             <h3 style={styles.entryTitle}>{selectedEntry.title}</h3>
             {selectedEntry.tags?.length > 0 && (
@@ -518,13 +522,12 @@ export default function App() {
               <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => setView('archive')}>Return to Archive</button>
             </div>
           </div>
-
           <div style={{ borderTop: '1px solid #fbcfe8', marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
             <p style={{ fontSize: 14, color: '#be185d', fontWeight: 500, margin: 0 }}>
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
             </p>
             <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-              v2.3 • Updates posted here
+              v2.4 • Updates posted here
             </p>
           </div>
         </div>
@@ -535,10 +538,15 @@ export default function App() {
   return (
     <div style={styles.container}>
       <div style={styles.wrapper}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
           <button style={styles.buttonSecondary} onClick={requestNotificationPermission}>
             {Notification.permission === 'granted'? '✓ Reminder On' : 'Enable 7pm Reminder'}
           </button>
+          <button style={styles.buttonSecondary} onClick={exportJSON}>Download Backup</button>
+          <label style={{...styles.buttonSecondary, cursor: 'pointer' }}>
+            Import Backup
+            <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
+          </label>
           <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
         </div>
 
@@ -621,7 +629,6 @@ export default function App() {
                 value={title}
                 onChange={e => setTitle(e.target.value)}
               />
-
               <div style={{ marginBottom: 12 }}>
                 <input
                   style={styles.input}
@@ -644,19 +651,16 @@ export default function App() {
                   </div>
                 )}
               </div>
-
               <textarea
                 style={styles.textarea}
                 placeholder="Write your thoughts..."
                 value={content}
                 onChange={e => setContent(e.target.value)}
               />
-
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
                 <button style={styles.button} onClick={() => handleSave(false)}>
                   {editingId? 'Update Entry' : 'Save Entry'}
                 </button>
-
                 {saveStatus === 'saving' && (
                   <span style={{ fontSize: 12, color: '#9d174d' }}>Saving...</span>
                 )}
@@ -665,7 +669,6 @@ export default function App() {
                     Draft saved • {saveTime}
                   </span>
                 )}
-
                 {editingId && (
                   <button
                     style={{...styles.button,...styles.buttonSecondary }}
@@ -722,7 +725,6 @@ export default function App() {
                 Export All as PDF
               </button>
             )}
-
             {archivedEntries.length === 0? (
               <p style={{ textAlign: 'center', color: '#6b7280' }}>
                 {searchQuery? 'No archived entries match your search' : 'No archived entries yet'}
@@ -762,7 +764,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-            v2.3 • Updates posted here
+            v2.4 • The King's Household Church | forteido@gmail.com
           </p>
         </div>
       </div>

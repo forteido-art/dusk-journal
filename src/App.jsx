@@ -660,7 +660,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-            v2.0 • Updates posted here
+            v2.0 • The King's Household Church | forteido@gmail.com
           </p>
         </div>
       </div>

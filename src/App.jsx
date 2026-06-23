@@ -147,6 +147,7 @@ export default function App() {
   const [view, setView] = useState('journal');
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('dusk-entries');
@@ -191,7 +192,7 @@ export default function App() {
     if (editingId) {
       setEntries(entries.map(e =>
         e.id === editingId
-         ? {...e, title, content, updated: new Date().toISOString() }
+        ? {...e, title, content, updated: new Date().toISOString() }
           : e
       ));
       setEditingId(null);
@@ -248,8 +249,23 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const journalEntries = entries.filter(e =>!e.archived);
-  const archivedEntries = entries.filter(e => e.archived);
+  const filterEntries = (entryList) => {
+    if (!searchQuery.trim()) return entryList;
+
+    const query = searchQuery.toLowerCase();
+
+    return entryList.filter(e => {
+      const titleMatch = e.title.toLowerCase().includes(query);
+      const contentMatch = e.content.toLowerCase().includes(query);
+      const dateStr = new Date(e.created).toLocaleDateString();
+      const dateMatch = dateStr.toLowerCase().includes(query);
+
+      return titleMatch || contentMatch || dateMatch;
+    });
+  };
+
+  const journalEntries = filterEntries(entries.filter(e =>!e.archived));
+  const archivedEntries = filterEntries(entries.filter(e => e.archived));
 
   if (view === 'entry' && selectedEntry) {
     return (
@@ -273,7 +289,7 @@ export default function App() {
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
             </p>
             <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-              v1.0 • Updates posted here
+              v1.0 • Sandfilled Rd, Aleto Eleme. forteido@gmail.com
             </p>
           </div>
         </div>
@@ -310,6 +326,42 @@ export default function App() {
           </button>
         </div>
 
+        {/* Search Bar with Clear Button */}
+        <div style={{ marginBottom: 20, position: 'relative' }}>
+          <input
+            style={{...styles.input, marginBottom: 0, paddingRight: 40}}
+            placeholder="Search by date, title, or any word..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{
+                position: 'absolute',
+                right: 12,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                fontSize: 18,
+                color: '#9d174d',
+                cursor: 'pointer',
+                padding: 0,
+                lineHeight: 1
+              }}
+              aria-label="Clear search"
+            >
+              ×
+            </button>
+          )}
+          {searchQuery && (
+            <p style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>
+              Found {journalEntries.length + archivedEntries.length} entries
+            </p>
+          )}
+        </div>
+
         {view === 'journal' && (
           <>
             <div style={styles.form}>
@@ -339,7 +391,9 @@ export default function App() {
             </div>
 
             {journalEntries.length === 0? (
-              <p style={{ textAlign: 'center', color: '#6b7280' }}>No entries yet. Write your first one!</p>
+              <p style={{ textAlign: 'center', color: '#6b7280' }}>
+                {searchQuery? 'No entries match your search' : 'No entries yet. Write your first one!'}
+              </p>
             ) : (
               journalEntries.map(entry => (
                 <div key={entry.id} style={styles.entry}>
@@ -369,7 +423,9 @@ export default function App() {
             )}
 
             {archivedEntries.length === 0? (
-              <p style={{ textAlign: 'center', color: '#6b7280' }}>No archived entries yet</p>
+              <p style={{ textAlign: 'center', color: '#6b7280' }}>
+                {searchQuery? 'No archived entries match your search' : 'No archived entries yet'}
+              </p>
             ) : (
               archivedEntries.map(entry => (
                 <div key={entry.id} style={styles.entry}>

@@ -136,6 +136,31 @@ const styles = {
     fontSize: 14,
     fontWeight: 500,
     border: '1px solid #fcd34a'
+  },
+  tag: {
+    display: 'inline-block',
+    backgroundColor: '#fbcfe8',
+    color: '#9d174d',
+    padding: '4px 8px',
+    borderRadius: 6,
+    fontSize: 12,
+    marginRight: 6,
+    marginTop: 6
+  },
+  lockScreen: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fdf2f8'
+  },
+  lockBox: {
+    backgroundColor: '#fff',
+    padding: 40,
+    borderRadius: 16,
+    border: '1px solid #fbcfe8',
+    textAlign: 'center',
+    maxWidth: 400
   }
 };
 
@@ -143,20 +168,72 @@ export default function App() {
   const [entries, setEntries] = useState([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [view, setView] = useState('journal');
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState('newest');
+  const [customTags, setCustomTags] = useState(['Visions', 'Bible Study', 'Work', 'Family']);
+
+  // Security/Lock
+  const [isLocked, setIsLocked] = useState(true);
+  const [pin, setPin] = useState('');
+  const [storedPin, setStoredPin] = useState(localStorage.getItem('dusk-pin') || '');
 
   useEffect(() => {
     const saved = localStorage.getItem('dusk-entries');
     if (saved) setEntries(JSON.parse(saved));
-  }, []);
+
+    const savedTags = localStorage.getItem('dusk-tags');
+    if (savedTags) setCustomTags(JSON.parse(savedTags));
+
+    // Check if PIN exists
+    if (!storedPin) setIsLocked(false);
+  }, [storedPin]);
 
   useEffect(() => {
     localStorage.setItem('dusk-entries', JSON.stringify(entries));
   }, [entries]);
+
+  useEffect(() => {
+    localStorage.setItem('dusk-tags', JSON.stringify(customTags));
+  }, [customTags]);
+
+  // 7pm Daily Reminder
+  useEffect(() => {
+    if (!('Notification' in window)) return;
+
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    const scheduleReminder = () => {
+      const now = new Date();
+      const reminderTime = new Date();
+      reminderTime.setHours(19, 0, 0, 0); // 7pm
+
+      if (reminderTime < now) {
+        reminderTime.setDate(reminderTime.getDate() + 1);
+      }
+
+      const timeUntilReminder = reminderTime.getTime() - now.getTime();
+
+      setTimeout(() => {
+        if (Notification.permission === 'granted') {
+          new Notification('Dusk Journal', {
+            body: 'Time to reflect. Open Dusk and write your thoughts for today.',
+            icon: '/favicon.ico'
+          });
+        }
+        scheduleReminder(); // reschedule for next day
+      }, timeUntilReminder);
+    };
+
+    scheduleReminder();
+  }, []);
 
   useEffect(() => {
     const autoSave = () => {
@@ -173,7 +250,7 @@ export default function App() {
       window.removeEventListener('beforeunload', autoSave);
       window.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [title, content, editingId, entries]);
+  }, [title, content, editingId, entries, tags]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -186,28 +263,66 @@ export default function App() {
     };
   }, []);
 
+  const handlePinSubmit = () => {
+    if (!storedPin) {
+      // First time setup
+      if (pin.length === 4) {
+        localStorage.setItem('dusk-pin', pin);
+        setStoredPin(pin);
+        setIsLocked(false);
+        setPin('');
+      }
+    } else {
+      // Unlock
+      if (pin === storedPin) {
+        setIsLocked(false);
+        setPin('');
+      } else {
+        alert('Wrong PIN');
+        setPin('');
+      }
+    }
+  };
+
+  const addTag = (tag) => {
+    const cleanTag = tag.replace('#', '').trim();
+    if (cleanTag &&!tags.includes(cleanTag)) {
+      setTags([...tags, cleanTag]);
+      if (!customTags.includes(cleanTag)) {
+        setCustomTags([...customTags, cleanTag]);
+      }
+    }
+    setTagInput('');
+  };
+
+  const removeTag = (tag) => {
+    setTags(tags.filter(t => t!== tag));
+  };
+
   const handleSave = (silent = false) => {
     if (!title.trim() ||!content.trim()) return;
 
     if (editingId) {
       setEntries(entries.map(e =>
         e.id === editingId
-        ? {...e, title, content, updated: new Date().toISOString() }
+       ? {...e, title, content, tags, updated: new Date().toISOString() }
           : e
       ));
       setEditingId(null);
     } else {
-      setEntries([{ id: Date.now(), title, content, archived: false, created: new Date().toISOString() },...entries]);
+      setEntries([{ id: Date.now(), title, content, tags, archived: false, created: new Date().toISOString() },...entries]);
     }
     if (!silent) {
       setTitle('');
       setContent('');
+      setTags([]);
     }
   };
 
   const handleEdit = (entry) => {
     setTitle(entry.title);
     setContent(entry.content);
+    setTags(entry.tags || []);
     setEditingId(entry.id);
     setView('journal');
     setSelectedEntry(null);
@@ -234,8 +349,11 @@ export default function App() {
     doc.text(entry.title, 20, 30);
     doc.setFontSize(12);
     doc.text(new Date(entry.created).toLocaleDateString(), 20, 45);
+    if (entry.tags?.length) {
+      doc.text(`Tags: ${entry.tags.join(', ')}`, 20, 55);
+    }
     const lines = doc.splitTextToSize(entry.content, 170);
-    doc.text(lines, 20, 60);
+    doc.text(lines, 20, entry.tags?.length? 70 : 60);
     doc.save(`${entry.title.replace(/\s+/g, '_')}.pdf`);
   };
 
@@ -250,22 +368,56 @@ export default function App() {
   };
 
   const filterEntries = (entryList) => {
-    if (!searchQuery.trim()) return entryList;
+    let filtered = entryList;
 
-    const query = searchQuery.toLowerCase();
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(e => {
+        const titleMatch = e.title.toLowerCase().includes(query);
+        const contentMatch = e.content.toLowerCase().includes(query);
+        const dateStr = new Date(e.created).toLocaleDateString();
+        const dateMatch = dateStr.toLowerCase().includes(query);
+        const tagMatch = e.tags?.some(t => t.toLowerCase().includes(query));
+        return titleMatch || contentMatch || dateMatch || tagMatch;
+      });
+    }
 
-    return entryList.filter(e => {
-      const titleMatch = e.title.toLowerCase().includes(query);
-      const contentMatch = e.content.toLowerCase().includes(query);
-      const dateStr = new Date(e.created).toLocaleDateString();
-      const dateMatch = dateStr.toLowerCase().includes(query);
-
-      return titleMatch || contentMatch || dateMatch;
+    // Sort
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.created);
+      const dateB = new Date(b.created);
+      return sortOrder === 'newest'? dateB - dateA : dateA - dateB;
     });
+
+    return filtered;
   };
 
   const journalEntries = filterEntries(entries.filter(e =>!e.archived));
   const archivedEntries = filterEntries(entries.filter(e => e.archived));
+
+  // Lock Screen
+  if (isLocked) {
+    return (
+      <div style={styles.lockScreen}>
+        <div style={styles.lockBox}>
+          <h2 style={styles.title}>{storedPin? 'Enter PIN' : 'Set 4-Digit PIN'}</h2>
+          <p style={styles.subtitle}>Secure your journal</p>
+          <input
+            style={{...styles.input, textAlign: 'center', fontSize: 24, letterSpacing: 8}}
+            type="password"
+            maxLength={4}
+            placeholder="••••"
+            value={pin}
+            onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
+          />
+          <button style={styles.button} onClick={handlePinSubmit}>
+            {storedPin? 'Unlock' : 'Set PIN'}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (view === 'entry' && selectedEntry) {
     return (
@@ -273,6 +425,13 @@ export default function App() {
         <div style={styles.wrapper}>
           <div style={styles.entry}>
             <h3 style={styles.entryTitle}>{selectedEntry.title}</h3>
+            {selectedEntry.tags?.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                {selectedEntry.tags.map(t => (
+                  <span key={t} style={styles.tag}>#{t}</span>
+                ))}
+              </div>
+            )}
             <p style={styles.entryContent}>{selectedEntry.content}</p>
             <p style={styles.entryDate}>
               {new Date(selectedEntry.created).toLocaleDateString()}
@@ -289,7 +448,7 @@ export default function App() {
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
             </p>
             <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-              v1.0 • Sandfilled Rd, Aleto Eleme. forteido@gmail.com
+              v2.0 • Updates posted here
             </p>
           </div>
         </div>
@@ -326,41 +485,49 @@ export default function App() {
           </button>
         </div>
 
-        {/* Search Bar with Clear Button */}
-        <div style={{ marginBottom: 20, position: 'relative' }}>
-          <input
-            style={{...styles.input, marginBottom: 0, paddingRight: 40}}
-            placeholder="Search by date, title, or any word..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              style={{
-                position: 'absolute',
-                right: 12,
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                fontSize: 18,
-                color: '#9d174d',
-                cursor: 'pointer',
-                padding: 0,
-                lineHeight: 1
-              }}
-              aria-label="Clear search"
-            >
-              ×
-            </button>
-          )}
-          {searchQuery && (
-            <p style={{ fontSize: 12, color: '#6b7280', marginTop: 6 }}>
-              Found {journalEntries.length + archivedEntries.length} entries
-            </p>
-          )}
+        <div style={{ marginBottom: 20, display: 'flex', gap: 8 }}>
+          <div style={{ flex: 1, position: 'relative' }}>
+            <input
+              style={{...styles.input, marginBottom: 0, paddingRight: 40}}
+              placeholder="Search by date, title, tags, or any word..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 18,
+                  color: '#9d174d',
+                  cursor: 'pointer',
+                  padding: 0,
+                  lineHeight: 1
+                }}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </div>
+          <button
+            style={{...styles.buttonSecondary, marginTop: 0}}
+            onClick={() => setSortOrder(sortOrder === 'newest'? 'oldest' : 'newest')}
+          >
+            {sortOrder === 'newest'? 'Newest' : 'Oldest'}
+          </button>
         </div>
+
+        {searchQuery && (
+          <p style={{ fontSize: 12, color: '#6b7280', marginTop: -12, marginBottom: 12 }}>
+            Found {journalEntries.length + archivedEntries.length} entries
+          </p>
+        )}
 
         {view === 'journal' && (
           <>
@@ -371,6 +538,31 @@ export default function App() {
                 value={title}
                 onChange={e => setTitle(e.target.value)}
               />
+
+              {/* Tags Input */}
+              <div style={{ marginBottom: 12 }}>
+                <input
+                  style={styles.input}
+                  placeholder="Add tags... type and press Enter. e.g. Visions"
+                  value={tagInput}
+                  onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag(tagInput))}
+                  list="tag-list"
+                />
+                <datalist id="tag-list">
+                  {customTags.map(t => <option key={t} value={t} />)}
+                </datalist>
+                {tags.length > 0 && (
+                  <div style={{ marginTop: 8 }}>
+                    {tags.map(t => (
+                      <span key={t} style={styles.tag}>
+                        #{t} <span style={{ cursor: 'pointer' }} onClick={() => removeTag(t)}>×</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <textarea
                 style={styles.textarea}
                 placeholder="Write your thoughts..."
@@ -383,7 +575,7 @@ export default function App() {
               {editingId && (
                 <button
                   style={{...styles.button,...styles.buttonSecondary }}
-                  onClick={() => { setEditingId(null); setTitle(''); setContent(''); }}
+                  onClick={() => { setEditingId(null); setTitle(''); setContent(''); setTags([]); }}
                 >
                   Cancel
                 </button>
@@ -398,6 +590,13 @@ export default function App() {
               journalEntries.map(entry => (
                 <div key={entry.id} style={styles.entry}>
                   <h3 style={styles.entryTitle}>{entry.title}</h3>
+                  {entry.tags?.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      {entry.tags.map(t => (
+                        <span key={t} style={styles.tag}>#{t}</span>
+                      ))}
+                    </div>
+                  )}
                   <p style={styles.entryContent}>{entry.content}</p>
                   <p style={styles.entryDate}>
                     {new Date(entry.created).toLocaleDateString()}
@@ -435,6 +634,13 @@ export default function App() {
                   >
                     {entry.title}
                   </h3>
+                  {entry.tags?.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      {entry.tags.map(t => (
+                        <span key={t} style={styles.tag}>#{t}</span>
+                      ))}
+                    </div>
+                  )}
                   <p style={styles.entryDate}>
                     Archived • {new Date(entry.created).toLocaleDateString()}
                   </p>
@@ -454,7 +660,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-            v1.0 • Sandfilled Road,Aleto Eleme. forteido@gmail.com
+            v2.0 • Updates posted here
           </p>
         </div>
       </div>

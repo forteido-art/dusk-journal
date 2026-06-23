@@ -160,7 +160,8 @@ const styles = {
     borderRadius: 16,
     border: '1px solid #fbcfe8',
     textAlign: 'center',
-    maxWidth: 400
+    maxWidth: 400,
+    width: '100%'
   }
 };
 
@@ -178,29 +179,33 @@ export default function App() {
   const [sortOrder, setSortOrder] = useState('newest');
   const [customTags, setCustomTags] = useState(['Visions', 'Bible Study', 'Work', 'Family']);
 
-  // Security/Lock
+  // PIN Lock - enforced on every load
   const [isLocked, setIsLocked] = useState(true);
-  const [pin, setPin] = useState('');
-  const [storedPin, setStoredPin] = useState(localStorage.getItem('dusk-pin') || '');
+  const [pinInput, setPinInput] = useState('');
+  const storedPin = localStorage.getItem('dusk-pin');
 
   useEffect(() => {
-    const saved = localStorage.getItem('dusk-entries');
-    if (saved) setEntries(JSON.parse(saved));
+    // Load data only after unlock
+    if (!isLocked) {
+      const saved = localStorage.getItem('dusk-entries');
+      if (saved) setEntries(JSON.parse(saved));
 
-    const savedTags = localStorage.getItem('dusk-tags');
-    if (savedTags) setCustomTags(JSON.parse(savedTags));
-
-    // Check if PIN exists
-    if (!storedPin) setIsLocked(false);
-  }, [storedPin]);
-
-  useEffect(() => {
-    localStorage.setItem('dusk-entries', JSON.stringify(entries));
-  }, [entries]);
+      const savedTags = localStorage.getItem('dusk-tags');
+      if (savedTags) setCustomTags(JSON.parse(savedTags));
+    }
+  }, [isLocked]);
 
   useEffect(() => {
-    localStorage.setItem('dusk-tags', JSON.stringify(customTags));
-  }, [customTags]);
+    if (!isLocked) {
+      localStorage.setItem('dusk-entries', JSON.stringify(entries));
+    }
+  }, [entries, isLocked]);
+
+  useEffect(() => {
+    if (!isLocked) {
+      localStorage.setItem('dusk-tags', JSON.stringify(customTags));
+    }
+  }, [customTags, isLocked]);
 
   // 7pm Daily Reminder
   useEffect(() => {
@@ -213,7 +218,7 @@ export default function App() {
     const scheduleReminder = () => {
       const now = new Date();
       const reminderTime = new Date();
-      reminderTime.setHours(19, 0, 0, 0); // 7pm
+      reminderTime.setHours(19, 0, 0, 0); // 7pm WAT
 
       if (reminderTime < now) {
         reminderTime.setDate(reminderTime.getDate() + 1);
@@ -228,7 +233,7 @@ export default function App() {
             icon: '/favicon.ico'
           });
         }
-        scheduleReminder(); // reschedule for next day
+        scheduleReminder();
       }, timeUntilReminder);
     };
 
@@ -237,7 +242,7 @@ export default function App() {
 
   useEffect(() => {
     const autoSave = () => {
-      if (title.trim() || content.trim()) {
+      if (!isLocked && (title.trim() || content.trim())) {
         handleSave(true);
       }
     };
@@ -250,7 +255,7 @@ export default function App() {
       window.removeEventListener('beforeunload', autoSave);
       window.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [title, content, editingId, entries, tags]);
+  }, [title, content, editingId, entries, tags, isLocked]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -264,24 +269,37 @@ export default function App() {
   }, []);
 
   const handlePinSubmit = () => {
+    if (pinInput.length!== 4) {
+      alert('PIN must be 4 digits');
+      return;
+    }
+
     if (!storedPin) {
-      // First time setup
-      if (pin.length === 4) {
-        localStorage.setItem('dusk-pin', pin);
-        setStoredPin(pin);
-        setIsLocked(false);
-        setPin('');
-      }
+      // First time - set PIN
+      localStorage.setItem('dusk-pin', pinInput);
+      setIsLocked(false);
+      setPinInput('');
     } else {
       // Unlock
-      if (pin === storedPin) {
+      if (pinInput === storedPin) {
         setIsLocked(false);
-        setPin('');
+        setPinInput('');
       } else {
-        alert('Wrong PIN');
-        setPin('');
+        alert('Wrong PIN. Try again.');
+        setPinInput('');
       }
     }
+  };
+
+  const handleLock = () => {
+    setIsLocked(true);
+    setEntries([]);
+    setTitle('');
+    setContent('');
+    setTags([]);
+    setEditingId(null);
+    setView('journal');
+    setSelectedEntry(null);
   };
 
   const addTag = (tag) => {
@@ -305,7 +323,7 @@ export default function App() {
     if (editingId) {
       setEntries(entries.map(e =>
         e.id === editingId
-       ? {...e, title, content, tags, updated: new Date().toISOString() }
+         ? {...e, title, content, tags, updated: new Date().toISOString() }
           : e
       ));
       setEditingId(null);
@@ -382,7 +400,6 @@ export default function App() {
       });
     }
 
-    // Sort
     filtered.sort((a, b) => {
       const dateA = new Date(a.created);
       const dateB = new Date(b.created);
@@ -395,25 +412,31 @@ export default function App() {
   const journalEntries = filterEntries(entries.filter(e =>!e.archived));
   const archivedEntries = filterEntries(entries.filter(e => e.archived));
 
-  // Lock Screen
+  // PIN Lock Screen - shows before anything else
   if (isLocked) {
     return (
       <div style={styles.lockScreen}>
         <div style={styles.lockBox}>
-          <h2 style={styles.title}>{storedPin? 'Enter PIN' : 'Set 4-Digit PIN'}</h2>
-          <p style={styles.subtitle}>Secure your journal</p>
+          <h2 style={styles.title}>{storedPin? 'Dusk Locked' : 'Set Your PIN'}</h2>
+          <p style={styles.subtitle}>
+            {storedPin? 'Enter 4-digit PIN to unlock' : 'Create a 4-digit PIN to secure your journal'}
+          </p>
           <input
-            style={{...styles.input, textAlign: 'center', fontSize: 24, letterSpacing: 8}}
+            style={{...styles.input, textAlign: 'center', fontSize: 28, letterSpacing: 12, fontWeight: 600 }}
             type="password"
             maxLength={4}
             placeholder="••••"
-            value={pin}
-            onChange={e => setPin(e.target.value.replace(/\D/g, ''))}
+            value={pinInput}
+            onChange={e => setPinInput(e.target.value.replace(/\D/g, ''))}
             onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
+            autoFocus
           />
-          <button style={styles.button} onClick={handlePinSubmit}>
+          <button style={{...styles.button, width: '100%' }} onClick={handlePinSubmit}>
             {storedPin? 'Unlock' : 'Set PIN'}
           </button>
+          <p style={{ fontSize: 12, color: '#9d174d', marginTop: 16 }}>
+            PIN is stored locally on your device only
+          </p>
         </div>
       </div>
     );
@@ -423,6 +446,10 @@ export default function App() {
     return (
       <div style={styles.container}>
         <div style={styles.wrapper}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
+            <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
+          </div>
+
           <div style={styles.entry}>
             <h3 style={styles.entryTitle}>{selectedEntry.title}</h3>
             {selectedEntry.tags?.length > 0 && (
@@ -448,7 +475,7 @@ export default function App() {
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
             </p>
             <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-              v2.0 • Updates posted here
+              v2.1 • Updates posted here
             </p>
           </div>
         </div>
@@ -459,6 +486,10 @@ export default function App() {
   return (
     <div style={styles.container}>
       <div style={styles.wrapper}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 20 }}>
+          <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
+        </div>
+
         {!isOnline && (
           <div style={styles.offlineBanner}>
             No network. Please turn on your data
@@ -488,7 +519,7 @@ export default function App() {
         <div style={{ marginBottom: 20, display: 'flex', gap: 8 }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <input
-              style={{...styles.input, marginBottom: 0, paddingRight: 40}}
+              style={{...styles.input, marginBottom: 0, paddingRight: 40 }}
               placeholder="Search by date, title, tags, or any word..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -516,7 +547,7 @@ export default function App() {
             )}
           </div>
           <button
-            style={{...styles.buttonSecondary, marginTop: 0}}
+            style={{...styles.buttonSecondary, marginTop: 0 }}
             onClick={() => setSortOrder(sortOrder === 'newest'? 'oldest' : 'newest')}
           >
             {sortOrder === 'newest'? 'Newest' : 'Oldest'}
@@ -539,7 +570,6 @@ export default function App() {
                 onChange={e => setTitle(e.target.value)}
               />
 
-              {/* Tags Input */}
               <div style={{ marginBottom: 12 }}>
                 <input
                   style={styles.input}
@@ -660,7 +690,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: '#9d174d', marginTop: 4 }}>
-            v2.0 • The King's Household Church | forteido@gmail.com
+            v2.1 • The King's Household Church | forteido@gmail.com
           </p>
         </div>
       </div>

@@ -329,7 +329,7 @@ export default function App() {
       if (currentDraftId) {
         return prev.map(e =>
           e.id === currentDraftId
-        ? {...e, title, content, tags, updated: new Date().toISOString() }
+   ? {...e, title, content, tags, updated: new Date().toISOString() }
             : e
         );
       }
@@ -680,7 +680,7 @@ export default function App() {
 
         <div style={styles.header}>
           <h1 style={styles.title}>Dusk</h1>
-          <p style={styles.subtitle}>Your private journal</p>
+          <p style={styles.subtitle}>King's Household</p>
         </div>
 
         <div style={styles.tabs}>
@@ -881,36 +881,30 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v3.0 • Prophetic App | TKH | forteido@gmail.com
+            v3.0 • Pastor Julius Ugorji | TKH | forteido@gmail.com
           </p>
         </div>
       </div>
 
       {showSettings && (
-  <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
-    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
-        <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
-      </div>
-      <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
-        {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
-      </button>
-      <button style={styles.modalButton} onClick={requestNotificationPermission}>
-        ⏰ {Notification.permission === 'granted'? 'Reminder On' : 'Enable 7pm Reminder'}
-      </button>
-      <button style={styles.modalButton} onClick={exportAllPDF}>
-        📄 Export All as PDF
-      </button>
-      <button style={styles.modalButton} onClick={exportJSON}>
-        💾 Download Backup
-      </button>
-      <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
-        📤 Import Backup
-        <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
-      </label>
-      <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
-        🔒 Lock App
-      </button>
-    </div>
-  </div>
+        <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
+          <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
+              <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
+            </div>
+            <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
+              {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
+            </button>
+            <button style={styles.modalButton} onClick={requestNotificationPermission}>
+              ⏰ {Notification.permission === 'granted'? 'Reminder On' : 'Enable 7pm Reminder'}
+            </button>
+            <button style={styles.modalButton} onClick={exportAllPDF}>
+              📄 Export All as PDF
+            </button>
+            <button style={styles.modalButton} onClick={exportJSON}>
+              💾 Download Backup
+            </button>
+            <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
+              📤 Import Backup
+              <input type="file"

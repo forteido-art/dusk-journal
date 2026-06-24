@@ -901,7 +901,7 @@ export default function App() {
         </div>
       </div>
 
-      {showSettings && (
+       {showSettings && (
         <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
           <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -927,8 +927,9 @@ export default function App() {
             <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
               🔒 Lock App
             </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

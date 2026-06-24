@@ -904,10 +904,17 @@ export default function App() {
             </button>
             <button style={styles.modalButton} onClick={exportJSON}>
               💾 Download Backup
-            </button>
+                        </button>
             <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
               📤 Import Backup
-              <input type="file"
-             </label>
+              <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
+            </label>
+            <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
+              🔒 Lock App
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+    </div>
+  );
+}

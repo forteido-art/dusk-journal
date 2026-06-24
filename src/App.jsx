@@ -224,6 +224,43 @@ const getStyles = (isDark) => ({
   saveIndicator: {
     fontSize: 12,
     color: '#16a34a'
+  },
+  // Added Styles for Folders
+  folder: {
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
+    borderRadius: 12,
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
+    marginBottom: 12,
+    overflow: 'hidden'
+  },
+  folderHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '14px 20px',
+    backgroundColor: isDark ? '#333333' : '#fff5f9',
+    cursor: 'pointer',
+    fontWeight: 600,
+    fontSize: 16,
+    color: isDark ? '#f5f5f0' : '#be185d',
+    borderBottom: isDark ? '1px solid #404040' : '1px solid #fbcfe8'
+  },
+  folderContent: {
+    padding: '12px 20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 12
+  },
+  clickableTitle: {
+    fontSize: 15,
+    fontWeight: 500,
+    color: isDark ? '#e0e0e0' : '#374151',
+    cursor: 'pointer',
+    padding: '4px 0',
+    transition: 'color 0.2s',
+    ':hover': {
+      color: '#ec4899'
+    }
   }
 });
 
@@ -253,6 +290,9 @@ export default function App() {
   const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
   const [swRegistration, setSwRegistration] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  
+  // Track open/closed status of date folders
+  const [expandedFolders, setExpandedFolders] = useState({});
 
   const storedPin = localStorage.getItem('dusk-pin');
 
@@ -461,6 +501,13 @@ export default function App() {
     if (selectedEntry?.id === id) setSelectedEntry(null);
   };
 
+  const toggleFolder = (dateStr) => {
+    setExpandedFolders(prev => ({
+      ...prev,
+      [dateStr]: !prev[dateStr]
+    }));
+  };
+
   const exportPDF = (entry) => {
     const doc = new jsPDF();
     doc.setFontSize(20);
@@ -568,6 +615,37 @@ export default function App() {
   const journalEntries = filteredEntries.filter(e => !e.archived);
   const archivedEntries = filteredEntries.filter(e => e.archived);
 
+  // Group Archive Entries into Auto-Generated Folders Sorted by Date dd/mm/yyyy
+  const archivedFolders = useMemo(() => {
+    const groups = {};
+    archivedEntries.forEach(entry => {
+      const dateObj = new Date(entry.created);
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const year = dateObj.getFullYear();
+      const formattedDate = `${day}/${month}/${year}`;
+
+      if (!groups[formattedDate]) {
+        groups[formattedDate] = [];
+      }
+      groups[formattedDate].push(entry);
+    });
+
+    // Sort dates according to chosen system order
+    const sortedDates = Object.keys(groups).sort((a, b) => {
+      const [dayA, monthA, yearA] = a.split('/').map(Number);
+      const [dayB, monthB, yearB] = b.split('/').map(Number);
+      const dateA = new Date(yearA, monthA - 1, dayA);
+      const dateB = new Date(yearB, monthB - 1, dayB);
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
+    return sortedDates.map(date => ({
+      date,
+      entries: groups[date]
+    }));
+  }, [archivedEntries, sortOrder]);
+
   if (isLocked) {
     return (
       <div style={styles.lockScreen}>
@@ -643,7 +721,6 @@ export default function App() {
                 {isDark ? '☀️ Light Mode' : '🌙 Night Mode'}
               </button>
               <button style={styles.modalButton} onClick={requestNotificationPermission}>
-                {/* Fixed context template boundary syntax break */}
                 ⏰ {Notification.permission === 'granted' ? 'Reminder On' : 'Enable 7pm Reminder'}
               </button>
               <button style={styles.modalButton} onClick={exportAllPDF}>
@@ -861,33 +938,35 @@ export default function App() {
 
         {view === 'archive' && (
           <>
-            {archivedEntries.length === 0 ? (
+            {archivedFolders.length === 0 ? (
               <p style={{ textAlign: 'center', color: isDark ? '#a0a0a0' : '#6b7280' }}>
                 {searchQuery ? 'No archived entries match your search' : 'No archived entries yet'}
               </p>
             ) : (
-              archivedEntries.map(entry => (
-                <div key={entry.id} style={styles.entry}>
-                  <h3 style={styles.entryTitle} onClick={() => openEntryView(entry)}>
-                    {entry.title}
-                  </h3>
-                  {entry.tags?.length > 0 && (
-                    <div style={{ marginBottom: 8 }}>
-                      {entry.tags.map(t => (
-                        <span key={t} style={styles.tag}>#{t}</span>
-                      ))}
+              archivedFolders.map(folder => {
+                const isOpen = !!expandedFolders[folder.date];
+                return (
+                  <div key={folder.date} style={styles.folder}>
+                    <div style={styles.folderHeader} onClick={() => toggleFolder(folder.date)}>
+                      <span>📅 {folder.date}</span>
+                      <span>{isOpen ? '📂' : '📁'} ({folder.entries.length})</span>
                     </div>
-                  )}
-                  <p style={styles.entryDate}>
-                    Archived • {new Date(entry.created).toLocaleDateString()}
-                  </p>
-                  <div style={styles.entryActions}>
-                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => toggleArchive(entry.id)}>Unarchive</button>
-                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => handleDelete(entry.id)}>Delete</button>
-                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => exportPDF(entry)}>Export PDF</button>
+                    {isOpen && (
+                      <div style={styles.folderContent}>
+                        {folder.entries.map(entry => (
+                          <div 
+                            key={entry.id} 
+                            style={styles.clickableTitle}
+                            onClick={() => openEntryView(entry)}
+                          >
+                            • {entry.title || "Untitled Entry"}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </>
         )}
@@ -897,7 +976,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v3.5 • Pastor Julius Ugorji | TKH | forteido@gmail.com
+            v3.6 • Prophetic services every Tuesday,5pm | TKH
           </p>
         </div>
       </div>
@@ -913,7 +992,6 @@ export default function App() {
               {isDark ? '☀️ Light Mode' : '🌙 Night Mode'}
             </button>
             <button style={styles.modalButton} onClick={requestNotificationPermission}>
-              {/* Evaluates correctly to show accurate UI text based on notification consent */}
               ⏰ {Notification.permission === 'granted' ? 'Reminder On' : 'Enable 7pm Reminder'}
             </button>
             <button style={styles.modalButton} onClick={exportAllPDF}>

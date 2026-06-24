@@ -325,7 +325,7 @@ export default function App() {
       if (editingId) {
         return prev.map(e =>
           e.id === editingId
-       ? {...e, title, content, tags, updated: now }
+    ? {...e, title, content, tags, updated: now }
             : e
         );
       }
@@ -335,7 +335,7 @@ export default function App() {
       if (currentDraftId && existingDraftIndex > -1) {
         const updated = [...prev];
         updated[existingDraftIndex] = {
-      ...updated[existingDraftIndex],
+ ...updated[existingDraftIndex],
           title,
           content,
           tags,
@@ -346,6 +346,7 @@ export default function App() {
         const newId = Date.now();
         if (!currentDraftId) setCurrentDraftId(newId);
 
+        // Auto-archive all previous entries when creating new one
         const archivedPrev = prev.map(e => ({...e, archived: true }));
 
         const newEntry = {
@@ -622,7 +623,6 @@ export default function App() {
               <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => handleDelete(selectedEntry.id)}>Delete</button>
               <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => { setView('archive'); setSelectedEntry(null); }}>Return to Archive</button>
             </div>
-          </div>
           <div style={{ borderTop: `1px solid ${isDark? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
             <p style={{ fontSize: 14, color: isDark? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
@@ -896,7 +896,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v3.3 • Pastor Julius Ugorji | TKH | forteido@gmail.com
+            v2.8 • PWA Enabled
           </p>
         </div>
       </div>
@@ -908,8 +908,6 @@ export default function App() {
               <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
               <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
             </div>
-            <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
-              {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
             <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
               {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
             </button>

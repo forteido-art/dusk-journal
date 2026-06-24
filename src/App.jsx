@@ -225,7 +225,6 @@ const getStyles = (isDark) => ({
     fontSize: 12,
     color: '#16a34a'
   },
-  // Added Styles for Folders
   folder: {
     backgroundColor: isDark ? '#2a2a2a' : '#fff',
     borderRadius: 12,
@@ -242,7 +241,7 @@ const getStyles = (isDark) => ({
     cursor: 'pointer',
     fontWeight: 600,
     fontSize: 16,
-    color: isDark ? '#f5f5f0' : '#be185d',
+    color: isDark ? '#be185d' : '#be185d',
     borderBottom: isDark ? '1px solid #404040' : '1px solid #fbcfe8'
   },
   folderContent: {
@@ -258,9 +257,6 @@ const getStyles = (isDark) => ({
     cursor: 'pointer',
     padding: '4px 0',
     transition: 'color 0.2s',
-    ':hover': {
-      color: '#ec4899'
-    }
   }
 });
 
@@ -291,10 +287,34 @@ export default function App() {
   const [swRegistration, setSwRegistration] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   
-  // Track open/closed status of date folders
   const [expandedFolders, setExpandedFolders] = useState({});
 
   const storedPin = localStorage.getItem('dusk-pin');
+
+  // Unified Lock Function (Keeps data in memory)
+  const handleLock = useCallback(() => {
+    setIsLocked(true);
+    setView('journal');
+    setSelectedEntry(null);
+    setShowSettings(false);
+  }, []);
+
+  // Auto-lock on exit, minimize, or screen sleep
+  useEffect(() => {
+    const handleAutoLock = () => {
+      if (document.hidden || !document.hasFocus()) {
+        handleLock();
+      }
+    };
+
+    window.addEventListener('visibilitychange', handleAutoLock);
+    window.addEventListener('blur', handleAutoLock);
+
+    return () => {
+      window.removeEventListener('visibilitychange', handleAutoLock);
+      window.removeEventListener('blur', handleAutoLock);
+    };
+  }, [handleLock]);
 
   useEffect(() => {
     localStorage.setItem('dusk-theme', isDark ? 'dark' : 'light');
@@ -439,19 +459,6 @@ export default function App() {
       alert('Wrong PIN. Try again.');
       setPinInput('');
     }
-  };
-
-  const handleLock = () => {
-    setIsLocked(true);
-    setEntries([]);
-    setTitle('');
-    setContent('');
-    setTags([]);
-    setEditingId(null);
-    setCurrentDraftId(null);
-    setView('journal');
-    setSelectedEntry(null);
-    setShowSettings(false);
   };
 
   const addTag = (tag) => {
@@ -615,7 +622,6 @@ export default function App() {
   const journalEntries = filteredEntries.filter(e => !e.archived);
   const archivedEntries = filteredEntries.filter(e => e.archived);
 
-  // Group Archive Entries into Auto-Generated Folders Sorted by Date dd/mm/yyyy
   const archivedFolders = useMemo(() => {
     const groups = {};
     archivedEntries.forEach(entry => {
@@ -631,7 +637,6 @@ export default function App() {
       groups[formattedDate].push(entry);
     });
 
-    // Sort dates according to chosen system order
     const sortedDates = Object.keys(groups).sort((a, b) => {
       const [dayA, monthA, yearA] = a.split('/').map(Number);
       const [dayB, monthB, yearB] = b.split('/').map(Number);
@@ -645,6 +650,49 @@ export default function App() {
       entries: groups[date]
     }));
   }, [archivedEntries, sortOrder]);
+
+  const renderSettingsModal = () => (
+    showSettings && (
+      <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
+        <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
+            <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#f5f5f0' : '#000' }}>×</button>
+          </div>
+          <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
+            {isDark ? '☀️ Light Mode' : '🌙 Night Mode'}
+          </button>
+          <button style={styles.modalButton} onClick={requestNotificationPermission}>
+            {Notification.permission === 'granted' ? '⏰ Reminder On' : '⏰ Enable 7pm Reminder'}
+          </button>
+          <button style={styles.modalButton} onClick={exportAllPDF}>
+            📄 Export All as PDF
+          </button>
+          <button style={styles.modalButton} onClick={exportJSON}>
+            💾 Export JSON
+          </button>
+          <label style={{ ...styles.modalButton, display: 'block', cursor: 'pointer' }}>
+            📤 Import Backup
+            <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
+          </label>
+          <button style={{ ...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
+            🔒 Lock App
+          </button>
+        </div>
+      </div>
+    )
+  );
+
+  const renderFooter = () => (
+    <div style={{ borderTop: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
+      <p style={{ fontSize: 14, color: isDark ? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
+        Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
+      </p>
+      <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
+        v4.0 • Prophetic Services holds on Tuesdays 5pm.
+      </p>
+    </div>
+  );
 
   if (isLocked) {
     return (
@@ -701,44 +749,9 @@ export default function App() {
               <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => { setView('archive'); setSelectedEntry(null); }}>Return to Archive</button>
             </div>
           </div>
-          <div style={{ borderTop: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
-            <p style={{ fontSize: 14, color: isDark ? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
-              Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
-            </p>
-            <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-              v2.8 • PWA Enabled
-            </p>
-          </div>
+          {renderFooter()}
         </div>
-        {showSettings && (
-          <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
-            <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
-                <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#f5f5f0' : '#000' }}>×</button>
-              </div>
-              <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
-                {isDark ? '☀️ Light Mode' : '🌙 Night Mode'}
-              </button>
-              <button style={styles.modalButton} onClick={requestNotificationPermission}>
-                ⏰ {Notification.permission === 'granted' ? 'Reminder On' : 'Enable 7pm Reminder'}
-              </button>
-              <button style={styles.modalButton} onClick={exportAllPDF}>
-                📄 Export All as PDF
-              </button>
-              <button style={styles.modalButton} onClick={exportJSON}>
-                💾 Export JSON
-              </button>
-              <label style={{ ...styles.modalButton, display: 'block', cursor: 'pointer' }}>
-                📤 Import Backup
-                <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
-              </label>
-              <button style={{ ...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
-                🔒 Lock App
-              </button>
-            </div>
-          </div>
-        )}
+        {renderSettingsModal()}
       </div>
     );
   }
@@ -970,46 +983,9 @@ export default function App() {
             )}
           </>
         )}
-
-        <div style={{ borderTop: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
-          <p style={{ fontSize: 14, color: isDark ? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
-            Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
-          </p>
-          <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v3.6 • Prophetic services every Tuesday,5pm | TKH
-          </p>
-        </div>
+        {renderFooter()}
       </div>
-
-      {showSettings && (
-        <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
-          <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
-              <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#f5f5f0' : '#000' }}>×</button>
-            </div>
-            <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
-              {isDark ? '☀️ Light Mode' : '🌙 Night Mode'}
-            </button>
-            <button style={styles.modalButton} onClick={requestNotificationPermission}>
-              ⏰ {Notification.permission === 'granted' ? 'Reminder On' : 'Enable 7pm Reminder'}
-            </button>
-            <button style={styles.modalButton} onClick={exportAllPDF}>
-              📄 Export All as PDF
-            </button>
-            <button style={styles.modalButton} onClick={exportJSON}>
-              💾 Export JSON
-            </button>
-            <label style={{ ...styles.modalButton, display: 'block', cursor: 'pointer' }}>
-              📤 Import Backup
-              <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
-            </label>
-            <button style={{ ...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
-              🔒 Lock App
-            </button>
-          </div>
-        </div>
-      )}
+      {renderSettingsModal()}
     </div>
   );
 }

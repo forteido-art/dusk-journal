@@ -927,9 +927,8 @@ export default function App() {
             <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
               🔒 Lock App
             </button>
-          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

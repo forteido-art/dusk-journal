@@ -163,6 +163,39 @@ const getStyles = (isDark) => ({
     textAlign: 'center',
     maxWidth: 400,
     width: '100%'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50,
+    padding: 20
+  },
+  modalBox: {
+    backgroundColor: isDark? '#2a2a2a' : '#fff',
+    borderRadius: 12,
+    width: '100%',
+    maxWidth: 400,
+    padding: 24,
+    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`
+  },
+  modalButton: {
+    width: '100%',
+    textAlign: 'left',
+    padding: '12px 16px',
+    borderRadius: 8,
+    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    backgroundColor: isDark? '#1a1a1a' : '#fff',
+    color: isDark? '#f5f5f0' : '#000',
+    cursor: 'pointer',
+    fontSize: 14,
+    marginBottom: 12
   }
 });
 
@@ -193,6 +226,7 @@ export default function App() {
 
   const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
   const [swRegistration, setSwRegistration] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('dusk-theme');
@@ -286,6 +320,7 @@ export default function App() {
     } else {
       alert('Permission denied. Enable in browser settings > Notifications.');
     }
+    setShowSettings(false);
   };
 
   const handleSave = (isAutoSave = false) => {
@@ -294,7 +329,7 @@ export default function App() {
       if (currentDraftId) {
         return prev.map(e =>
           e.id === currentDraftId
-         ? {...e, title, content, tags, updated: new Date().toISOString() }
+        ? {...e, title, content, tags, updated: new Date().toISOString() }
             : e
         );
       }
@@ -388,6 +423,7 @@ export default function App() {
     setEditingId(null);
     setView('journal');
     setSelectedEntry(null);
+    setShowSettings(false);
   };
 
   const addTag = (tag) => {
@@ -452,6 +488,7 @@ export default function App() {
 
   const exportAllPDF = () => {
     entries.forEach(entry => exportPDF(entry));
+    setShowSettings(false);
   };
 
   const openEntryView = (entry) => {
@@ -472,6 +509,7 @@ export default function App() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     alert('Backup downloaded! Save it to Google Drive or WhatsApp.');
+    setShowSettings(false);
   };
 
   const importJSON = (e) => {
@@ -490,6 +528,8 @@ export default function App() {
       }
     };
     reader.readAsText(file);
+    e.target.value = '';
+    setShowSettings(false);
   };
 
   const filterEntries = (entryList) => {
@@ -550,8 +590,8 @@ export default function App() {
       <div style={styles.container}>
         <div style={styles.wrapper}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-            <button style={styles.buttonSecondary} onClick={() => setIsDark(!isDark)}>
-              {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
+            <button style={styles.buttonSecondary} onClick={() => setShowSettings(true)}>
+              ⚙️ Settings
             </button>
             <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
           </div>
@@ -573,7 +613,6 @@ export default function App() {
               <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => handleDelete(selectedEntry.id)}>Delete</button>
               <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => setView('archive')}>Return to Archive</button>
             </div>
-          </div>
           <div style={{ borderTop: `1px solid ${isDark? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
             <p style={{ fontSize: 14, color: isDark? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
@@ -583,6 +622,35 @@ export default function App() {
             </p>
           </div>
         </div>
+        {showSettings && (
+          <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
+            <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
+                <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
+              </div>
+              <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
+                {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
+              </button>
+              <button style={styles.modalButton} onClick={requestNotificationPermission}>
+                ⏰ {Notification.permission === 'granted'? 'Reminder On' : 'Enable 7pm Reminder'}
+              </button>
+              <button style={styles.modalButton} onClick={exportAllPDF}>
+                📄 Export All as PDF
+              </button>
+              <button style={styles.modalButton} onClick={exportJSON}>
+                💾 Download Backup
+              </button>
+              <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
+                📤 Import Backup
+                <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
+              </label>
+              <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
+                🔒 Lock App
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -590,27 +658,18 @@ export default function App() {
   return (
     <div style={styles.container}>
       <div style={styles.wrapper}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <button style={styles.buttonSecondary} onClick={() => setShowSettings(true)}>
+            ⚙️ Settings
+          </button>
           {swUpdateAvailable && (
             <button
               style={{...styles.button, backgroundColor: '#16a34a', marginTop: 0}}
               onClick={handleUpdateApp}
             >
-              🔄 Update Available — Tap to Refresh
+              🔄 Update Available
             </button>
           )}
-          <button style={styles.buttonSecondary} onClick={() => setIsDark(!isDark)}>
-            {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
-          </button>
-          <button style={styles.buttonSecondary} onClick={requestNotificationPermission}>
-            {Notification.permission === 'granted'? '✓ Reminder On' : 'Enable 7pm Reminder'}
-          </button>
-          <button style={styles.buttonSecondary} onClick={exportJSON}>Download Backup</button>
-          <label style={{...styles.buttonSecondary, cursor: 'pointer', marginTop: 12, marginRight: 8, padding: '10px 20px', borderRadius: 8, fontSize: 14, fontWeight: 500 }}>
-            Import Backup
-            <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
-          </label>
-          <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
         </div>
 
         {!isOnline && (
@@ -783,11 +842,6 @@ export default function App() {
 
         {view === 'archive' && (
           <>
-            {archivedEntries.length > 0 && (
-              <button style={{...styles.button, marginBottom: 20 }} onClick={exportAllPDF}>
-                Export All as PDF
-              </button>
-            )}
             {archivedEntries.length === 0? (
               <p style={{ textAlign: 'center', color: isDark? '#a0a0a0' : '#6b7280' }}>
                 {searchQuery? 'No archived entries match your search' : 'No archived entries yet'}
@@ -827,10 +881,30 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v2.8 • Pastor Julius Ugorji | TKH | forteido@gmail.com
+            v2.9 • Prophetic App | TKH | forteido@gmail.com
           </p>
         </div>
       </div>
-    </div>
-  );
-}
+
+      {showSettings && (
+        <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
+          <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
+              <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
+            </div>
+            <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
+              {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
+            </button>
+            <button style={styles.modalButton} onClick={requestNotificationPermission}>
+              ⏰ {Notification.permission === 'granted'? 'Reminder On' : 'Enable 7pm Reminder'}
+            </button>
+            <button style={styles.modalButton} onClick={exportAllPDF}>
+              📄 Export All as PDF
+            </button>
+            <button style={styles.modalButton} onClick={exportJSON}>
+              💾 Download Backup
+            </button>
+            <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
+              📤 Import Backup
+              <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />

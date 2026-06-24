@@ -325,7 +325,7 @@ export default function App() {
       if (editingId) {
         return prev.map(e =>
           e.id === editingId
-         ? {...e, title, content, tags, updated: now }
+       ? {...e, title, content, tags, updated: now }
             : e
         );
       }
@@ -335,7 +335,7 @@ export default function App() {
       if (currentDraftId && existingDraftIndex > -1) {
         const updated = [...prev];
         updated[existingDraftIndex] = {
-        ...updated[existingDraftIndex],
+      ...updated[existingDraftIndex],
           title,
           content,
           tags,
@@ -345,6 +345,9 @@ export default function App() {
       } else {
         const newId = Date.now();
         if (!currentDraftId) setCurrentDraftId(newId);
+
+        const archivedPrev = prev.map(e => ({...e, archived: true }));
+
         const newEntry = {
           id: newId,
           title,
@@ -353,7 +356,7 @@ export default function App() {
           archived: false,
           created: now
         };
-        return [newEntry,...prev];
+        return [newEntry,...archivedPrev];
       }
     });
 
@@ -536,6 +539,12 @@ export default function App() {
     setShowSettings(false);
   };
 
+  const openEntryView = (entry) => {
+    setSelectedEntry(entry);
+    setView('entry');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const filteredEntries = useMemo(() => {
     let filtered = entries;
     if (searchQuery.trim()) {
@@ -584,6 +593,74 @@ export default function App() {
             PIN is stored locally on your device only
           </p>
         </div>
+      </div>
+    );
+  }
+
+  if (view === 'entry' && selectedEntry) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.wrapper}>
+          <button style={styles.settingsBtn} onClick={() => setShowSettings(true)}>
+            ⚙️ Settings
+          </button>
+          <div style={styles.entry}>
+            <h3 style={styles.entryTitle}>{selectedEntry.title}</h3>
+            {selectedEntry.tags?.length > 0 && (
+              <div style={{ marginBottom: 12 }}>
+                {selectedEntry.tags.map(t => (
+                  <span key={t} style={styles.tag}>#{t}</span>
+                ))}
+              </div>
+            )}
+            <p style={styles.entryContent}>{selectedEntry.content}</p>
+            <p style={styles.entryDate}>
+              {new Date(selectedEntry.created).toLocaleDateString()}
+            </p>
+            <div style={styles.entryActions}>
+              <button style={styles.button} onClick={() => handleEdit(selectedEntry)}>Edit</button>
+              <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => handleDelete(selectedEntry.id)}>Delete</button>
+              <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => { setView('archive'); setSelectedEntry(null); }}>Return to Archive</button>
+            </div>
+          </div>
+          <div style={{ borderTop: `1px solid ${isDark? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
+            <p style={{ fontSize: 14, color: isDark? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
+              Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
+            </p>
+            <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
+              v2.8 • PWA Enabled
+            </p>
+          </div>
+        </div>
+        {showSettings && (
+          <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
+            <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
+                <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
+              </div>
+              <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
+                {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
+              </button>
+              <button style={styles.modalButton} onClick={requestNotificationPermission}>
+                ⏰ {Notification.permission === 'granted'? 'Reminder On' : 'Enable 7pm Reminder'}
+              </button>
+              <button style={styles.modalButton} onClick={exportAllPDF}>
+                📄 Export All as PDF
+              </button>
+              <button style={styles.modalButton} onClick={exportJSON}>
+                💾 Export JSON
+              </button>
+              <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
+                📤 Import Backup
+                <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
+              </label>
+              <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
+                🔒 Lock App
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -790,7 +867,7 @@ export default function App() {
             ) : (
               archivedEntries.map(entry => (
                 <div key={entry.id} style={styles.entry}>
-                  <h3 style={styles.entryTitle} onClick={() => setSelectedEntry(entry)}>
+                  <h3 style={styles.entryTitle} onClick={() => openEntryView(entry)}>
                     {entry.title}
                   </h3>
                   {entry.tags?.length > 0 && (
@@ -819,7 +896,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v3.2 • Pastor Julius Ugorji | TKH | forteido@gmail.com
+            v3.3 • Pastor Julius Ugorji | TKH | forteido@gmail.com
           </p>
         </div>
       </div>
@@ -831,6 +908,8 @@ export default function App() {
               <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
               <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
             </div>
+            <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
+              {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
             <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
               {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
             </button>

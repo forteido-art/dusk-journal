@@ -896,7 +896,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v2.8 • PWA Enabled
+            v3.4 • Pastor Julius Ugorji | TKH | forteido@gmail.com
           </p>
         </div>
       </div>

@@ -1,11 +1,11 @@
 {
   "name": "Dusk Journal",
   "short_name": "Dusk",
-  "description": "Private journal app",
-  "start_url": ".",
+  "description": "Your private journal with PIN lock and cloud backup",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#fff5f8",
-  "theme_color": "#d63384",
+  "background_color": "#fdf2f8",
+  "theme_color": "#ec4899",
   "icons": [
     {
       "src": "/icon-192.png",

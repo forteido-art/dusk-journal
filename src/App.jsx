@@ -902,6 +902,12 @@ export default function App() {
             </button>
             <button style={styles.modalButton} onClick={exportAllPDF}>
               📄 Export All as PDF
+                        <button style={styles.modalButton} onClick={exportAllPDF}>
+              📄 Export All as PDF
+            </button>
+            <button style={styles.modalButton} onClick={exportJSON}>
+              💾 Download Backup
+            </button>
             <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
               📤 Import Backup
               <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />

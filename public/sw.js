@@ -34,18 +34,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first for HTML, cache first for assets
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
+  if (event.request.mode === 'navigate') {
+    // For page navigations, try network first
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return caches.match(event.request);
       })
-  );
+    );
+  } else {
+    // For other requests, cache first
+    event.respondWith(
+      caches.match(event.request).then((response) => {
+        return response || fetch(event.request);
+      })
+    );
+  }
 });
 
 // Handle notification clicks

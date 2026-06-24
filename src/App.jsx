@@ -908,3 +908,6 @@ export default function App() {
             <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
               📤 Import Backup
               <input type="file"
+             </label>
+        </div>
+      </div>

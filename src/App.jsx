@@ -4,10 +4,10 @@ import { jsPDF } from 'jspdf';
 const getStyles = (isDark) => ({
   container: {
     minHeight: '100vh',
-    backgroundColor: isDark? '#1a1a1a' : '#fdf2f8',
+    backgroundColor: isDark ? '#1a1a1a' : '#fdf2f8',
     fontFamily: 'system-ui, -apple-system, sans-serif',
     padding: '40px 20px',
-    color: isDark? '#f5f5f0' : '#000',
+    color: isDark ? '#f5f5f0' : '#000',
     transition: 'background-color 0.3s, color 0.3s'
   },
   wrapper: {
@@ -20,9 +20,9 @@ const getStyles = (isDark) => ({
     top: 0,
     right: 0,
     padding: '8px 16px',
-    backgroundColor: isDark? '#2a2a2a' : '#fff',
-    color: isDark? '#f5f5f0' : '#be185d',
-    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
+    color: isDark ? '#f5f5f0' : '#be185d',
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
     borderRadius: 8,
     cursor: 'pointer',
     fontSize: 14,
@@ -38,11 +38,11 @@ const getStyles = (isDark) => ({
     fontSize: 32,
     fontWeight: 700,
     margin: 0,
-    color: isDark? '#f5f5f0' : '#be185d'
+    color: isDark ? '#f5f5f0' : '#be185d'
   },
   subtitle: {
     fontSize: 14,
-    color: isDark? '#d4d4d0' : '#9d174d',
+    color: isDark ? '#d4d4d0' : '#9d174d',
     marginTop: 8
   },
   tabs: {
@@ -54,9 +54,9 @@ const getStyles = (isDark) => ({
   tab: {
     padding: '8px 16px',
     borderRadius: 8,
-    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
-    backgroundColor: isDark? '#2a2a2a' : '#fff',
-    color: isDark? '#f5f5f0' : '#000',
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
+    color: isDark ? '#f5f5f0' : '#000',
     cursor: 'pointer',
     fontSize: 14
   },
@@ -66,34 +66,34 @@ const getStyles = (isDark) => ({
     border: '1px solid #ec4899'
   },
   form: {
-    backgroundColor: isDark? '#2a2a2a' : '#fff',
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
     padding: 20,
     borderRadius: 12,
-    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
     marginBottom: 30
   },
   input: {
     width: '100%',
     padding: 12,
     fontSize: 16,
-    border: `1px solid ${isDark? '#404040' : '#f9a8d4'}`,
+    border: `1px solid ${isDark ? '#404040' : '#f9a8d4'}`,
     borderRadius: 8,
     marginBottom: 12,
     boxSizing: 'border-box',
-    backgroundColor: isDark? '#1a1a1a' : '#fff',
-    color: isDark? '#f5f5f0' : '#000'
+    backgroundColor: isDark ? '#1a1a1a' : '#fff',
+    color: isDark ? '#f5f5f0' : '#000'
   },
   textarea: {
     width: '100%',
     padding: 12,
     fontSize: 16,
-    border: `1px solid ${isDark? '#404040' : '#f9a8d4'}`,
+    border: `1px solid ${isDark ? '#404040' : '#f9a8d4'}`,
     borderRadius: 8,
     minHeight: 120,
     boxSizing: 'border-box',
     fontFamily: 'inherit',
-    backgroundColor: isDark? '#1a1a1a' : '#fff',
-    color: isDark? '#f5f5f0' : '#000',
+    backgroundColor: isDark ? '#1a1a1a' : '#fff',
+    color: isDark ? '#f5f5f0' : '#000',
     resize: 'vertical'
   },
   button: {
@@ -109,33 +109,33 @@ const getStyles = (isDark) => ({
     fontWeight: 500
   },
   buttonSecondary: {
-    backgroundColor: isDark? '#2a2a2a' : '#fff',
-    color: isDark? '#f5f5f0' : '#be185d',
-    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
+    color: isDark ? '#f5f5f0' : '#be185d',
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`
   },
   entry: {
-    backgroundColor: isDark? '#2a2a2a' : '#fff',
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
     padding: 20,
     borderRadius: 12,
-    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
     marginBottom: 16
   },
   entryTitle: {
     fontSize: 18,
     fontWeight: 600,
     margin: '0 0 8px 0',
-    color: isDark? '#f5f5f0' : '#be185d',
+    color: isDark ? '#f5f5f0' : '#be185d',
     cursor: 'pointer'
   },
   entryContent: {
     fontSize: 14,
-    color: isDark? '#f5f5f0' : '#000',
+    color: isDark ? '#f5f5f0' : '#000',
     lineHeight: 1.6,
     whiteSpace: 'pre-wrap'
   },
   entryDate: {
     fontSize: 12,
-    color: isDark? '#a0a0a0' : '#6b7280',
+    color: isDark ? '#a0a0a0' : '#6b7280',
     marginTop: 8
   },
   entryActions: {
@@ -145,20 +145,20 @@ const getStyles = (isDark) => ({
     flexWrap: 'wrap'
   },
   offlineBanner: {
-    backgroundColor: isDark? '#3a2a00' : '#fef3c7',
-    color: isDark? '#f5f5f0' : '#92400e',
+    backgroundColor: isDark ? '#3a2a00' : '#fef3c7',
+    color: isDark ? '#f5f5f0' : '#92400e',
     padding: '10px 16px',
     borderRadius: 8,
     marginBottom: 20,
     textAlign: 'center',
     fontSize: 14,
     fontWeight: 500,
-    border: `1px solid ${isDark? '#5a4a00' : '#fcd34a'}`
+    border: `1px solid ${isDark ? '#5a4a00' : '#fcd34a'}`
   },
   tag: {
     display: 'inline-block',
-    backgroundColor: isDark? '#404040' : '#fbcfe8',
-    color: isDark? '#f5f5f0' : '#9d174d',
+    backgroundColor: isDark ? '#404040' : '#fbcfe8',
+    color: isDark ? '#f5f5f0' : '#9d174d',
     padding: '4px 8px',
     borderRadius: 6,
     fontSize: 12,
@@ -175,13 +175,13 @@ const getStyles = (isDark) => ({
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: isDark? '#1a1a1a' : '#fdf2f8'
+    backgroundColor: isDark ? '#1a1a1a' : '#fdf2f8'
   },
   lockBox: {
-    backgroundColor: isDark? '#2a2a2a' : '#fff',
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
     padding: 40,
     borderRadius: 16,
-    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
     textAlign: 'center',
     maxWidth: 400,
     width: '100%'
@@ -200,12 +200,12 @@ const getStyles = (isDark) => ({
     padding: 20
   },
   modalBox: {
-    backgroundColor: isDark? '#2a2a2a' : '#fff',
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
     borderRadius: 12,
     width: '100%',
     maxWidth: 400,
     padding: 24,
-    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
     maxHeight: '80vh',
     overflowY: 'auto'
   },
@@ -214,9 +214,9 @@ const getStyles = (isDark) => ({
     textAlign: 'left',
     padding: '12px 16px',
     borderRadius: 8,
-    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
-    backgroundColor: isDark? '#1a1a1a' : '#fff',
-    color: isDark? '#f5f5f0' : '#000',
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
+    backgroundColor: isDark ? '#1a1a1a' : '#fff',
+    color: isDark ? '#f5f5f0' : '#000',
     cursor: 'pointer',
     fontSize: 14,
     marginBottom: 12
@@ -257,7 +257,7 @@ export default function App() {
   const storedPin = localStorage.getItem('dusk-pin');
 
   useEffect(() => {
-    localStorage.setItem('dusk-theme', isDark? 'dark' : 'light');
+    localStorage.setItem('dusk-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
 
   useEffect(() => {
@@ -317,7 +317,7 @@ export default function App() {
   }, [showSettings]);
 
   const handleSave = useCallback((isAutoSave = false) => {
-    if (!title.trim() &&!content.trim()) return;
+    if (!title.trim() && !content.trim()) return;
 
     setEntries(prev => {
       const now = new Date().toISOString();
@@ -325,7 +325,7 @@ export default function App() {
       if (editingId) {
         return prev.map(e =>
           e.id === editingId
-    ? {...e, title, content, tags, updated: now }
+            ? { ...e, title, content, tags, updated: now }
             : e
         );
       }
@@ -335,7 +335,7 @@ export default function App() {
       if (currentDraftId && existingDraftIndex > -1) {
         const updated = [...prev];
         updated[existingDraftIndex] = {
- ...updated[existingDraftIndex],
+          ...updated[existingDraftIndex],
           title,
           content,
           tags,
@@ -346,8 +346,7 @@ export default function App() {
         const newId = Date.now();
         if (!currentDraftId) setCurrentDraftId(newId);
 
-        // Auto-archive all previous entries when creating new one
-        const archivedPrev = prev.map(e => ({...e, archived: true }));
+        const archivedPrev = prev.map(e => ({ ...e, archived: true }));
 
         const newEntry = {
           id: newId,
@@ -357,7 +356,7 @@ export default function App() {
           archived: false,
           created: now
         };
-        return [newEntry,...archivedPrev];
+        return [newEntry, ...archivedPrev];
       }
     });
 
@@ -379,13 +378,13 @@ export default function App() {
   }, [title, content, tags, editingId, currentDraftId]);
 
   useEffect(() => {
-    if (!title.trim() &&!content.trim()) return;
+    if (!title.trim() && !content.trim()) return;
     const timer = setTimeout(() => handleSave(true), 1000);
     return () => clearTimeout(timer);
   }, [title, content, tags, handleSave]);
 
   const handlePinSubmit = () => {
-    if (pinInput.length!== 4) {
+    if (pinInput.length !== 4) {
       alert('PIN must be 4 digits');
       return;
     }
@@ -417,7 +416,7 @@ export default function App() {
 
   const addTag = (tag) => {
     const cleanTag = tag.replace('#', '').trim();
-    if (cleanTag &&!tags.includes(cleanTag)) {
+    if (cleanTag && !tags.includes(cleanTag)) {
       setTags([...tags, cleanTag]);
       if (!customTags.includes(cleanTag)) {
         setCustomTags([...customTags, cleanTag]);
@@ -427,7 +426,7 @@ export default function App() {
   };
 
   const removeTag = (tag) => {
-    setTags(tags.filter(t => t!== tag));
+    setTags(tags.filter(t => t !== tag));
   };
 
   const handleEdit = (entry) => {
@@ -443,7 +442,7 @@ export default function App() {
 
   const handleDelete = (id) => {
     if (window.confirm('Delete this entry permanently?')) {
-      setEntries(entries.filter(e => e.id!== id));
+      setEntries(entries.filter(e => e.id !== id));
       if (selectedEntry?.id === id) setSelectedEntry(null);
       if (editingId === id || currentDraftId === id) {
         setTitle('');
@@ -457,7 +456,7 @@ export default function App() {
 
   const toggleArchive = (id) => {
     setEntries(entries.map(e =>
-      e.id === id? {...e, archived:!e.archived } : e
+      e.id === id ? { ...e, archived: !e.archived } : e
     ));
     if (selectedEntry?.id === id) setSelectedEntry(null);
   };
@@ -472,7 +471,7 @@ export default function App() {
       doc.text(`Tags: ${entry.tags.join(', ')}`, 20, 55);
     }
     const lines = doc.splitTextToSize(entry.content, 170);
-    doc.text(lines, 20, entry.tags?.length? 70 : 60);
+    doc.text(lines, 20, entry.tags?.length ? 70 : 60);
     doc.save(`${entry.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
   };
 
@@ -562,23 +561,23 @@ export default function App() {
     return filtered.sort((a, b) => {
       const dateA = new Date(a.created);
       const dateB = new Date(b.created);
-      return sortOrder === 'newest'? dateB - dateA : dateA - dateB;
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
   }, [entries, searchQuery, sortOrder]);
 
-  const journalEntries = filteredEntries.filter(e =>!e.archived);
+  const journalEntries = filteredEntries.filter(e => !e.archived);
   const archivedEntries = filteredEntries.filter(e => e.archived);
 
   if (isLocked) {
     return (
       <div style={styles.lockScreen}>
         <div style={styles.lockBox}>
-          <h2 style={styles.title}>{storedPin? 'Dusk Locked' : 'Set Your PIN'}</h2>
+          <h2 style={styles.title}>{storedPin ? 'Dusk Locked' : 'Set Your PIN'}</h2>
           <p style={styles.subtitle}>
-            {storedPin? 'Enter 4-digit PIN to unlock' : 'Create a 4-digit PIN to secure your journal'}
+            {storedPin ? 'Enter 4-digit PIN to unlock' : 'Create a 4-digit PIN to secure your journal'}
           </p>
           <input
-            style={{...styles.input, textAlign: 'center', fontSize: 28, letterSpacing: 12, fontWeight: 600 }}
+            style={{ ...styles.input, textAlign: 'center', fontSize: 28, letterSpacing: 12, fontWeight: 600 }}
             type="password"
             maxLength={4}
             placeholder="••••"
@@ -587,10 +586,10 @@ export default function App() {
             onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
             autoFocus
           />
-          <button style={{...styles.button, width: '100%' }} onClick={handlePinSubmit}>
-            {storedPin? 'Unlock' : 'Set PIN'}
+          <button style={{ ...styles.button, width: '100%' }} onClick={handlePinSubmit}>
+            {storedPin ? 'Unlock' : 'Set PIN'}
           </button>
-          <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 16 }}>
+          <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 16 }}>
             PIN is stored locally on your device only
           </p>
         </div>
@@ -620,14 +619,15 @@ export default function App() {
             </p>
             <div style={styles.entryActions}>
               <button style={styles.button} onClick={() => handleEdit(selectedEntry)}>Edit</button>
-              <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => handleDelete(selectedEntry.id)}>Delete</button>
-              <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => { setView('archive'); setSelectedEntry(null); }}>Return to Archive</button>
+              <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => handleDelete(selectedEntry.id)}>Delete</button>
+              <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => { setView('archive'); setSelectedEntry(null); }}>Return to Archive</button>
             </div>
-          <div style={{ borderTop: `1px solid ${isDark? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
-            <p style={{ fontSize: 14, color: isDark? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
+          </div>
+          <div style={{ borderTop: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
+            <p style={{ fontSize: 14, color: isDark ? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
             </p>
-            <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
+            <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
               v2.8 • PWA Enabled
             </p>
           </div>
@@ -637,13 +637,14 @@ export default function App() {
             <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
-                <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
+                <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#f5f5f0' : '#000' }}>×</button>
               </div>
               <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
-                {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
+                {isDark ? '☀️ Light Mode' : '🌙 Night Mode'}
               </button>
               <button style={styles.modalButton} onClick={requestNotificationPermission}>
-                ⏰ {Notification.permission === 'granted'? 'Reminder On' : 'Enable 7pm Reminder'}
+                {/* Fixed context template boundary syntax break */}
+                ⏰ {Notification.permission === 'granted' ? 'Reminder On' : 'Enable 7pm Reminder'}
               </button>
               <button style={styles.modalButton} onClick={exportAllPDF}>
                 📄 Export All as PDF
@@ -651,11 +652,11 @@ export default function App() {
               <button style={styles.modalButton} onClick={exportJSON}>
                 💾 Export JSON
               </button>
-              <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
+              <label style={{ ...styles.modalButton, display: 'block', cursor: 'pointer' }}>
                 📤 Import Backup
                 <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
               </label>
-              <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
+              <button style={{ ...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
                 🔒 Lock App
               </button>
             </div>
@@ -675,7 +676,7 @@ export default function App() {
         {swUpdateAvailable && (
           <div style={{ textAlign: 'center', marginBottom: 20 }}>
             <button
-              style={{...styles.button, backgroundColor: '#16a34a', marginTop: 0 }}
+              style={{ ...styles.button, backgroundColor: '#16a34a', marginTop: 0 }}
               onClick={() => {
                 if (swRegistration?.waiting) {
                   swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -701,7 +702,7 @@ export default function App() {
 
         <div style={styles.tabs}>
           <button
-            style={{...styles.tab,...(view === 'journal'? styles.tabActive : {}) }}
+            style={{ ...styles.tab, ...(view === 'journal' ? styles.tabActive : {}) }}
             onClick={() => {
               setView('journal');
               setSelectedEntry(null);
@@ -711,7 +712,7 @@ export default function App() {
             Journal
           </button>
           <button
-            style={{...styles.tab,...(view === 'archive'? styles.tabActive : {}) }}
+            style={{ ...styles.tab, ...(view === 'archive' ? styles.tabActive : {}) }}
             onClick={() => { setView('archive'); setSelectedEntry(null); }}
           >
             Archive ({archivedEntries.length})
@@ -721,7 +722,7 @@ export default function App() {
         <div style={{ marginBottom: 20, display: 'flex', gap: 8 }}>
           <div style={{ flex: 1, position: 'relative' }}>
             <input
-              style={{...styles.input, marginBottom: 0, paddingRight: 40 }}
+              style={{ ...styles.input, marginBottom: 0, paddingRight: 40 }}
               placeholder="Search by date, title, tags, or any word..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
@@ -737,7 +738,7 @@ export default function App() {
                   background: 'none',
                   border: 'none',
                   fontSize: 18,
-                  color: isDark? '#f5f5f0' : '#9d174d',
+                  color: isDark ? '#f5f5f0' : '#9d174d',
                   cursor: 'pointer',
                   padding: 0,
                   lineHeight: 1
@@ -748,15 +749,15 @@ export default function App() {
             )}
           </div>
           <button
-            style={{...styles.buttonSecondary, marginTop: 0 }}
-            onClick={() => setSortOrder(sortOrder === 'newest'? 'oldest' : 'newest')}
+            style={{ ...styles.buttonSecondary, marginTop: 0 }}
+            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
           >
-            {sortOrder === 'newest'? 'Newest' : 'Oldest'}
+            {sortOrder === 'newest' ? 'Newest' : 'Oldest'}
           </button>
         </div>
 
         {searchQuery && (
-          <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#6b7280', marginTop: -12, marginBottom: 12 }}>
+          <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#6b7280', marginTop: -12, marginBottom: 12 }}>
             Found {journalEntries.length + archivedEntries.length} entries
           </p>
         )}
@@ -800,10 +801,10 @@ export default function App() {
               />
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
                 <button style={styles.button} onClick={() => handleSave(false)}>
-                  {editingId? 'Update Entry' : 'Save Entry'}
+                  {editingId ? 'Update Entry' : 'Save Entry'}
                 </button>
                 {saveStatus === 'saving' && (
-                  <span style={{ fontSize: 12, color: isDark? '#d4d4d0' : '#9d174d' }}>Saving...</span>
+                  <span style={{ fontSize: 12, color: isDark ? '#d4d4d0' : '#9d174d' }}>Saving...</span>
                 )}
                 {saveStatus === 'saved' && (
                   <span style={styles.saveIndicator}>
@@ -812,7 +813,7 @@ export default function App() {
                 )}
                 {editingId && (
                   <button
-                    style={{...styles.button,...styles.buttonSecondary }}
+                    style={{ ...styles.button, ...styles.buttonSecondary }}
                     onClick={() => {
                       setEditingId(null);
                       setTitle('');
@@ -827,9 +828,9 @@ export default function App() {
               </div>
             </div>
 
-            {journalEntries.length === 0? (
-              <p style={{ textAlign: 'center', color: isDark? '#a0a0a0' : '#6b7280' }}>
-                {searchQuery? 'No entries match your search' : 'No entries yet. Write your first one!'}
+            {journalEntries.length === 0 ? (
+              <p style={{ textAlign: 'center', color: isDark ? '#a0a0a0' : '#6b7280' }}>
+                {searchQuery ? 'No entries match your search' : 'No entries yet. Write your first one!'}
               </p>
             ) : (
               journalEntries.map(entry => (
@@ -847,10 +848,10 @@ export default function App() {
                     {new Date(entry.created).toLocaleDateString()}
                   </p>
                   <div style={styles.entryActions}>
-                    <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => handleEdit(entry)}>Edit</button>
-                    <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => toggleArchive(entry.id)}>Archive</button>
-                    <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => handleDelete(entry.id)}>Delete</button>
-                    <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => exportPDF(entry)}>Export PDF</button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => handleEdit(entry)}>Edit</button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => toggleArchive(entry.id)}>Archive</button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => handleDelete(entry.id)}>Delete</button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => exportPDF(entry)}>Export PDF</button>
                   </div>
                 </div>
               ))
@@ -860,9 +861,9 @@ export default function App() {
 
         {view === 'archive' && (
           <>
-            {archivedEntries.length === 0? (
-              <p style={{ textAlign: 'center', color: isDark? '#a0a0a0' : '#6b7280' }}>
-                {searchQuery? 'No archived entries match your search' : 'No archived entries yet'}
+            {archivedEntries.length === 0 ? (
+              <p style={{ textAlign: 'center', color: isDark ? '#a0a0a0' : '#6b7280' }}>
+                {searchQuery ? 'No archived entries match your search' : 'No archived entries yet'}
               </p>
             ) : (
               archivedEntries.map(entry => (
@@ -881,9 +882,9 @@ export default function App() {
                     Archived • {new Date(entry.created).toLocaleDateString()}
                   </p>
                   <div style={styles.entryActions}>
-                    <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => toggleArchive(entry.id)}>Unarchive</button>
-                    <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => handleDelete(entry.id)}>Delete</button>
-                    <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => exportPDF(entry)}>Export PDF</button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => toggleArchive(entry.id)}>Unarchive</button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => handleDelete(entry.id)}>Delete</button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => exportPDF(entry)}>Export PDF</button>
                   </div>
                 </div>
               ))
@@ -891,42 +892,46 @@ export default function App() {
           </>
         )}
 
-        <div style={{ borderTop: `1px solid ${isDark? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
-          <p style={{ fontSize: 14, color: isDark? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
+        <div style={{ borderTop: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
+          <p style={{ fontSize: 14, color: isDark ? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
-          <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v3.4 • Pastor Julius Ugorji | TKH | forteido@gmail.com
+          <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
+            v3.5 • Pastor Julius Ugorji | TKH | forteido@gmail.com
           </p>
         </div>
       </div>
 
-       {showSettings && (
-  <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
-    <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
-        <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
-      </div>
-      <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
-        {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
-      </button>
-      <button style={styles.modalButton} onClick={requestNotificationPermission}>
-        ⏰ {Notification.permission === 'granted'? 'Reminder On' : 'Enable 7pm Reminder'}
-      </button>
-      <button style={styles.modalButton} onClick={exportAllPDF}>
-        📄 Export All as PDF
-      </button>
-      <button style={styles.modalButton} onClick={exportJSON}>
-        💾 Export JSON
-      </button>
-      <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
-        📤 Import Backup
-        <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
-      </label>
-      <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
-        🔒 Lock App
-      </button>
+      {showSettings && (
+        <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
+          <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
+              <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#f5f5f0' : '#000' }}>×</button>
+            </div>
+            <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
+              {isDark ? '☀️ Light Mode' : '🌙 Night Mode'}
+            </button>
+            <button style={styles.modalButton} onClick={requestNotificationPermission}>
+              {/* Evaluates correctly to show accurate UI text based on notification consent */}
+              ⏰ {Notification.permission === 'granted' ? 'Reminder On' : 'Enable 7pm Reminder'}
+            </button>
+            <button style={styles.modalButton} onClick={exportAllPDF}>
+              📄 Export All as PDF
+            </button>
+            <button style={styles.modalButton} onClick={exportJSON}>
+              💾 Export JSON
+            </button>
+            <label style={{ ...styles.modalButton, display: 'block', cursor: 'pointer' }}>
+              📤 Import Backup
+              <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
+            </label>
+            <button style={{ ...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
+              🔒 Lock App
+            </button>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
+  );
+}

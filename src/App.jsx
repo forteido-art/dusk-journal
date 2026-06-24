@@ -191,6 +191,9 @@ export default function App() {
   const [pinInput, setPinInput] = useState('');
   const storedPin = localStorage.getItem('dusk-pin');
 
+  const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
+  const [swRegistration, setSwRegistration] = useState(null);
+
   useEffect(() => {
     const savedTheme = localStorage.getItem('dusk-theme');
     if (savedTheme) setIsDark(savedTheme === 'dark');
@@ -218,6 +221,27 @@ export default function App() {
   }, [customTags, isLocked]);
 
   useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        setSwRegistration(registration);
+
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              setSwUpdateAvailable(true);
+            }
+          });
+        });
+      });
+
+      navigator.serviceWorker.getRegistration().then((reg) => {
+        if (reg) reg.update();
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     const scheduleReminder = () => {
       if (!('Notification' in window)) return;
       if (Notification.permission!== 'granted') return;
@@ -236,6 +260,19 @@ export default function App() {
     };
     scheduleReminder();
   }, []);
+
+  const handleUpdateApp = () => {
+    if (swRegistration?.waiting) {
+      swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      swRegistration.waiting.addEventListener('statechange', (e) => {
+        if (e.target.state === 'activated') {
+          window.location.reload();
+        }
+      });
+    } else {
+      window.location.reload();
+    }
+  };
 
   const requestNotificationPermission = async () => {
     if (!('Notification' in window)) {
@@ -257,7 +294,7 @@ export default function App() {
       if (currentDraftId) {
         return prev.map(e =>
           e.id === currentDraftId
-          ? {...e, title, content, tags, updated: new Date().toISOString() }
+         ? {...e, title, content, tags, updated: new Date().toISOString() }
             : e
         );
       }
@@ -542,7 +579,7 @@ export default function App() {
               Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
             </p>
             <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-              v2.5 • PWA Enabled
+              v2.6 • PWA Enabled
             </p>
           </div>
         </div>
@@ -554,6 +591,14 @@ export default function App() {
     <div style={styles.container}>
       <div style={styles.wrapper}>
         <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+          {swUpdateAvailable && (
+            <button
+              style={{...styles.button, backgroundColor: '#16a34a', marginTop: 0}}
+              onClick={handleUpdateApp}
+            >
+              🔄 Update Available — Tap to Refresh
+            </button>
+          )}
           <button style={styles.buttonSecondary} onClick={() => setIsDark(!isDark)}>
             {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
           </button>
@@ -782,7 +827,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v2.5 • PWA Enabled
+            v2.6 • PWA Enabled
           </p>
         </div>
       </div>

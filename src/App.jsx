@@ -239,6 +239,7 @@ export default function App() {
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [currentDraftId, setCurrentDraftId] = useState(null);
   const [view, setView] = useState('journal');
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -319,27 +320,41 @@ export default function App() {
     if (!title.trim() &&!content.trim()) return;
 
     setEntries(prev => {
-      const existingIndex = prev.findIndex(e => e.id === editingId);
-      if (editingId && existingIndex > -1) {
+      const now = new Date().toISOString();
+
+      if (editingId) {
+        return prev.map(e =>
+          e.id === editingId
+         ? {...e, title, content, tags, updated: now }
+            : e
+        );
+      }
+
+      const existingDraftIndex = prev.findIndex(e => e.id === currentDraftId);
+
+      if (currentDraftId && existingDraftIndex > -1) {
         const updated = [...prev];
-        updated[existingIndex] = {
-         ...updated[existingIndex],
+        updated[existingDraftIndex] = {
+        ...updated[existingDraftIndex],
           title,
           content,
           tags,
-          updated: new Date().toISOString()
+          updated: now
         };
         return updated;
+      } else {
+        const newId = Date.now();
+        if (!currentDraftId) setCurrentDraftId(newId);
+        const newEntry = {
+          id: newId,
+          title,
+          content,
+          tags,
+          archived: false,
+          created: now
+        };
+        return [newEntry,...prev];
       }
-      const newEntry = {
-        id: Date.now(),
-        title,
-        content,
-        tags,
-        archived: false,
-        created: new Date().toISOString()
-      };
-      return [newEntry,...prev];
     });
 
     if (isAutoSave) {
@@ -354,9 +369,10 @@ export default function App() {
       setContent('');
       setTags([]);
       setEditingId(null);
+      setCurrentDraftId(null);
       setSaveStatus('');
     }
-  }, [title, content, tags, editingId]);
+  }, [title, content, tags, editingId, currentDraftId]);
 
   useEffect(() => {
     if (!title.trim() &&!content.trim()) return;
@@ -389,6 +405,7 @@ export default function App() {
     setContent('');
     setTags([]);
     setEditingId(null);
+    setCurrentDraftId(null);
     setView('journal');
     setSelectedEntry(null);
     setShowSettings(false);
@@ -414,6 +431,7 @@ export default function App() {
     setContent(entry.content);
     setTags(entry.tags || []);
     setEditingId(entry.id);
+    setCurrentDraftId(null);
     setView('journal');
     setSelectedEntry(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -423,11 +441,12 @@ export default function App() {
     if (window.confirm('Delete this entry permanently?')) {
       setEntries(entries.filter(e => e.id!== id));
       if (selectedEntry?.id === id) setSelectedEntry(null);
-      if (editingId === id) {
+      if (editingId === id || currentDraftId === id) {
         setTitle('');
         setContent('');
         setTags([]);
         setEditingId(null);
+        setCurrentDraftId(null);
       }
     }
   };
@@ -606,7 +625,11 @@ export default function App() {
         <div style={styles.tabs}>
           <button
             style={{...styles.tab,...(view === 'journal'? styles.tabActive : {}) }}
-            onClick={() => { setView('journal'); setSelectedEntry(null); }}
+            onClick={() => {
+              setView('journal');
+              setSelectedEntry(null);
+              if (!editingId) setCurrentDraftId(null);
+            }}
           >
             Journal
           </button>
@@ -796,7 +819,7 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v3.1 • Pastor Julius Ugorji | TKH | forteido@gmail.com
+            v2.7 • PWA Enabled
           </p>
         </div>
       </div>

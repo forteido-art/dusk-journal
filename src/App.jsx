@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { jsPDF } from 'jspdf';
 
 const getStyles = (isDark) => ({
@@ -12,11 +12,27 @@ const getStyles = (isDark) => ({
   },
   wrapper: {
     maxWidth: 700,
-    margin: '0 auto'
+    margin: '0 auto',
+    position: 'relative'
+  },
+  settingsBtn: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    padding: '8px 16px',
+    backgroundColor: isDark? '#2a2a2a' : '#fff',
+    color: isDark? '#f5f5f0' : '#be185d',
+    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontSize: 14,
+    fontWeight: 500,
+    zIndex: 10
   },
   header: {
     textAlign: 'center',
-    marginBottom: 40
+    marginBottom: 40,
+    paddingTop: 20
   },
   title: {
     fontSize: 32,
@@ -77,7 +93,8 @@ const getStyles = (isDark) => ({
     boxSizing: 'border-box',
     fontFamily: 'inherit',
     backgroundColor: isDark? '#1a1a1a' : '#fff',
-    color: isDark? '#f5f5f0' : '#000'
+    color: isDark? '#f5f5f0' : '#000',
+    resize: 'vertical'
   },
   button: {
     marginTop: 12,
@@ -148,6 +165,11 @@ const getStyles = (isDark) => ({
     marginRight: 6,
     marginTop: 6
   },
+  tagRemove: {
+    marginLeft: 6,
+    cursor: 'pointer',
+    fontWeight: 700
+  },
   lockScreen: {
     minHeight: '100vh',
     display: 'flex',
@@ -163,11 +185,52 @@ const getStyles = (isDark) => ({
     textAlign: 'center',
     maxWidth: 400,
     width: '100%'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 50,
+    padding: 20
+  },
+  modalBox: {
+    backgroundColor: isDark? '#2a2a2a' : '#fff',
+    borderRadius: 12,
+    width: '100%',
+    maxWidth: 400,
+    padding: 24,
+    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    maxHeight: '80vh',
+    overflowY: 'auto'
+  },
+  modalButton: {
+    width: '100%',
+    textAlign: 'left',
+    padding: '12px 16px',
+    borderRadius: 8,
+    border: `1px solid ${isDark? '#404040' : '#fbcfe8'}`,
+    backgroundColor: isDark? '#1a1a1a' : '#fff',
+    color: isDark? '#f5f5f0' : '#000',
+    cursor: 'pointer',
+    fontSize: 14,
+    marginBottom: 12
+  },
+  saveIndicator: {
+    fontSize: 12,
+    color: '#16a34a'
   }
 });
 
 export default function App() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    return localStorage.getItem('dusk-theme') === 'dark';
+  });
   const styles = getStyles(isDark);
 
   const [entries, setEntries] = useState([]);
@@ -182,22 +245,15 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState('newest');
   const [customTags, setCustomTags] = useState(['Visions', 'Bible Study', 'Work', 'Family']);
-
-  const [currentDraftId, setCurrentDraftId] = useState(null);
   const [saveStatus, setSaveStatus] = useState('');
   const [saveTime, setSaveTime] = useState('');
-
   const [isLocked, setIsLocked] = useState(true);
   const [pinInput, setPinInput] = useState('');
-  const storedPin = localStorage.getItem('dusk-pin');
-
   const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
   const [swRegistration, setSwRegistration] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('dusk-theme');
-    if (savedTheme) setIsDark(savedTheme === 'dark');
-  }, []);
+  const storedPin = localStorage.getItem('dusk-pin');
 
   useEffect(() => {
     localStorage.setItem('dusk-theme', isDark? 'dark' : 'light');
@@ -205,10 +261,14 @@ export default function App() {
 
   useEffect(() => {
     if (!isLocked) {
-      const saved = localStorage.getItem('dusk-entries');
-      if (saved) setEntries(JSON.parse(saved));
-      const savedTags = localStorage.getItem('dusk-tags');
-      if (savedTags) setCustomTags(JSON.parse(savedTags));
+      try {
+        const saved = localStorage.getItem('dusk-entries');
+        if (saved) setEntries(JSON.parse(saved));
+        const savedTags = localStorage.getItem('dusk-tags');
+        if (savedTags) setCustomTags(JSON.parse(savedTags));
+      } catch (e) {
+        console.error('Failed to load entries:', e);
+      }
     }
   }, [isLocked]);
 
@@ -224,7 +284,6 @@ export default function App() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
         setSwRegistration(registration);
-
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           newWorker.addEventListener('statechange', () => {
@@ -234,69 +293,43 @@ export default function App() {
           });
         });
       });
-
-      navigator.serviceWorker.getRegistration().then((reg) => {
-        if (reg) reg.update();
-      });
     }
   }, []);
 
   useEffect(() => {
-    const scheduleReminder = () => {
-      if (!('Notification' in window)) return;
-      if (Notification.permission!== 'granted') return;
-      const now = new Date();
-      const reminderTime = new Date();
-      reminderTime.setHours(19, 0, 0, 0);
-      if (reminderTime < now) reminderTime.setDate(reminderTime.getDate() + 1);
-      const timeUntilReminder = reminderTime.getTime() - now.getTime();
-      setTimeout(() => {
-        new Notification('Dusk Journal', {
-          body: 'Time to reflect. Open Dusk and write your thoughts for today.',
-          icon: '/icon-192.png'
-        });
-        scheduleReminder();
-      }, timeUntilReminder);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
-    scheduleReminder();
   }, []);
 
-  const handleUpdateApp = () => {
-    if (swRegistration?.waiting) {
-      swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      swRegistration.waiting.addEventListener('statechange', (e) => {
-        if (e.target.state === 'activated') {
-          window.location.reload();
-        }
-      });
-    } else {
-      window.location.reload();
-    }
-  };
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape' && showSettings) setShowSettings(false);
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [showSettings]);
 
-  const requestNotificationPermission = async () => {
-    if (!('Notification' in window)) {
-      alert('Notifications not supported on this browser');
-      return;
-    }
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      alert('7pm reminder enabled! Works when app is installed to home screen.');
-      window.location.reload();
-    } else {
-      alert('Permission denied. Enable in browser settings > Notifications.');
-    }
-  };
-
-  const handleSave = (isAutoSave = false) => {
+  const handleSave = useCallback((isAutoSave = false) => {
     if (!title.trim() &&!content.trim()) return;
+
     setEntries(prev => {
-      if (currentDraftId) {
-        return prev.map(e =>
-          e.id === currentDraftId
-         ? {...e, title, content, tags, updated: new Date().toISOString() }
-            : e
-        );
+      const existingIndex = prev.findIndex(e => e.id === editingId);
+      if (editingId && existingIndex > -1) {
+        const updated = [...prev];
+        updated[existingIndex] = {
+         ...updated[existingIndex],
+          title,
+          content,
+          tags,
+          updated: new Date().toISOString()
+        };
+        return updated;
       }
       const newEntry = {
         id: Date.now(),
@@ -306,7 +339,6 @@ export default function App() {
         archived: false,
         created: new Date().toISOString()
       };
-      setCurrentDraftId(newEntry.id);
       return [newEntry,...prev];
     });
 
@@ -321,42 +353,16 @@ export default function App() {
       setTitle('');
       setContent('');
       setTags([]);
-      setCurrentDraftId(null);
+      setEditingId(null);
       setSaveStatus('');
     }
-  };
+  }, [title, content, tags, editingId]);
 
   useEffect(() => {
     if (!title.trim() &&!content.trim()) return;
-    const timer = setTimeout(() => {
-      handleSave(true);
-    }, 1000);
+    const timer = setTimeout(() => handleSave(true), 1000);
     return () => clearTimeout(timer);
-  }, [title, content, tags]);
-
-  useEffect(() => {
-    const autoSave = () => handleSave(true);
-    window.addEventListener('beforeunload', autoSave);
-    const handleVisibility = () => {
-      if (document.visibilityState === 'hidden') autoSave();
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-    return () => {
-      window.removeEventListener('beforeunload', autoSave);
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, [title, content, tags, currentDraftId]);
-
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, []);
+  }, [title, content, tags, handleSave]);
 
   const handlePinSubmit = () => {
     if (pinInput.length!== 4) {
@@ -367,14 +373,12 @@ export default function App() {
       localStorage.setItem('dusk-pin', pinInput);
       setIsLocked(false);
       setPinInput('');
+    } else if (pinInput === storedPin) {
+      setIsLocked(false);
+      setPinInput('');
     } else {
-      if (pinInput === storedPin) {
-        setIsLocked(false);
-        setPinInput('');
-      } else {
-        alert('Wrong PIN. Try again.');
-        setPinInput('');
-      }
+      alert('Wrong PIN. Try again.');
+      setPinInput('');
     }
   };
 
@@ -384,10 +388,10 @@ export default function App() {
     setTitle('');
     setContent('');
     setTags([]);
-    setCurrentDraftId(null);
     setEditingId(null);
     setView('journal');
     setSelectedEntry(null);
+    setShowSettings(false);
   };
 
   const addTag = (tag) => {
@@ -409,7 +413,6 @@ export default function App() {
     setTitle(entry.title);
     setContent(entry.content);
     setTags(entry.tags || []);
-    setCurrentDraftId(entry.id);
     setEditingId(entry.id);
     setView('journal');
     setSelectedEntry(null);
@@ -420,11 +423,11 @@ export default function App() {
     if (window.confirm('Delete this entry permanently?')) {
       setEntries(entries.filter(e => e.id!== id));
       if (selectedEntry?.id === id) setSelectedEntry(null);
-      if (currentDraftId === id) {
+      if (editingId === id) {
         setTitle('');
         setContent('');
         setTags([]);
-        setCurrentDraftId(null);
+        setEditingId(null);
       }
     }
   };
@@ -447,20 +450,23 @@ export default function App() {
     }
     const lines = doc.splitTextToSize(entry.content, 170);
     doc.text(lines, 20, entry.tags?.length? 70 : 60);
-    doc.save(`${entry.title.replace(/\s+/g, '_')}.pdf`);
+    doc.save(`${entry.title.replace(/[^a-z0-9]/gi, '_')}.pdf`);
   };
 
   const exportAllPDF = () => {
+    if (entries.length === 0) {
+      alert('No entries to export');
+      return;
+    }
     entries.forEach(entry => exportPDF(entry));
-  };
-
-  const openEntryView = (entry) => {
-    setSelectedEntry(entry);
-    setView('entry');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowSettings(false);
   };
 
   const exportJSON = () => {
+    if (entries.length === 0) {
+      alert('No entries to export');
+      return;
+    }
     const dataStr = JSON.stringify(entries, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -471,7 +477,7 @@ export default function App() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    alert('Backup downloaded! Save it to Google Drive or WhatsApp.');
+    setShowSettings(false);
   };
 
   const importJSON = (e) => {
@@ -481,19 +487,38 @@ export default function App() {
     reader.onload = (event) => {
       try {
         const imported = JSON.parse(event.target.result);
-        if (Array.isArray(imported) && window.confirm(`Import ${imported.length} entries? This will replace current entries.`)) {
+        if (!Array.isArray(imported)) throw new Error('Invalid format');
+        if (window.confirm(`Import ${imported.length} entries? This will replace current entries.`)) {
           setEntries(imported);
           alert('Backup restored successfully!');
         }
       } catch (err) {
-        alert('Invalid backup file');
+        alert('Invalid backup file. Make sure it was exported from Dusk.');
       }
     };
     reader.readAsText(file);
+    e.target.value = '';
+    setShowSettings(false);
   };
 
-  const filterEntries = (entryList) => {
-    let filtered = entryList;
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      alert('Notifications not supported on this browser');
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      alert('7pm reminder enabled!');
+      new Notification('Dusk Journal', {
+        body: 'Reminders are now active. You will be notified at 7pm daily.',
+        icon: '/icon-192.png'
+      });
+    }
+    setShowSettings(false);
+  };
+
+  const filteredEntries = useMemo(() => {
+    let filtered = entries;
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(e => {
@@ -505,16 +530,15 @@ export default function App() {
         return titleMatch || contentMatch || dateMatch || tagMatch;
       });
     }
-    filtered.sort((a, b) => {
+    return filtered.sort((a, b) => {
       const dateA = new Date(a.created);
       const dateB = new Date(b.created);
       return sortOrder === 'newest'? dateB - dateA : dateA - dateB;
     });
-    return filtered;
-  };
+  }, [entries, searchQuery, sortOrder]);
 
-  const journalEntries = filterEntries(entries.filter(e =>!e.archived));
-  const archivedEntries = filterEntries(entries.filter(e => e.archived));
+  const journalEntries = filteredEntries.filter(e =>!e.archived);
+  const archivedEntries = filteredEntries.filter(e => e.archived);
 
   if (isLocked) {
     return (
@@ -545,73 +569,28 @@ export default function App() {
     );
   }
 
-  if (view === 'entry' && selectedEntry) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.wrapper}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-            <button style={styles.buttonSecondary} onClick={() => setIsDark(!isDark)}>
-              {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
-            </button>
-            <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
-          </div>
-          <div style={styles.entry}>
-            <h3 style={styles.entryTitle}>{selectedEntry.title}</h3>
-            {selectedEntry.tags?.length > 0 && (
-              <div style={{ marginBottom: 12 }}>
-                {selectedEntry.tags.map(t => (
-                  <span key={t} style={styles.tag}>#{t}</span>
-                ))}
-              </div>
-            )}
-            <p style={styles.entryContent}>{selectedEntry.content}</p>
-            <p style={styles.entryDate}>
-              {new Date(selectedEntry.created).toLocaleDateString()}
-            </p>
-            <div style={styles.entryActions}>
-              <button style={styles.button} onClick={() => handleEdit(selectedEntry)}>Edit</button>
-              <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => handleDelete(selectedEntry.id)}>Delete</button>
-              <button style={{...styles.button,...styles.buttonSecondary }} onClick={() => setView('archive')}>Return to Archive</button>
-            </div>
-          </div>
-          <div style={{ borderTop: `1px solid ${isDark? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
-            <p style={{ fontSize: 14, color: isDark? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
-              Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
-            </p>
-            <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-              v2.6 • PWA Enabled
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div style={styles.container}>
       <div style={styles.wrapper}>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-          {swUpdateAvailable && (
+        <button style={styles.settingsBtn} onClick={() => setShowSettings(true)}>
+          ⚙️ Settings
+        </button>
+
+        {swUpdateAvailable && (
+          <div style={{ textAlign: 'center', marginBottom: 20 }}>
             <button
-              style={{...styles.button, backgroundColor: '#16a34a', marginTop: 0}}
-              onClick={handleUpdateApp}
+              style={{...styles.button, backgroundColor: '#16a34a', marginTop: 0 }}
+              onClick={() => {
+                if (swRegistration?.waiting) {
+                  swRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                  window.location.reload();
+                }
+              }}
             >
-              🔄 Update Available — Tap to Refresh
+              🔄 Update Available
             </button>
-          )}
-          <button style={styles.buttonSecondary} onClick={() => setIsDark(!isDark)}>
-            {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
-          </button>
-          <button style={styles.buttonSecondary} onClick={requestNotificationPermission}>
-            {Notification.permission === 'granted'? '✓ Reminder On' : 'Enable 7pm Reminder'}
-          </button>
-          <button style={styles.buttonSecondary} onClick={exportJSON}>Download Backup</button>
-          <label style={{...styles.buttonSecondary, cursor: 'pointer', marginTop: 12, marginRight: 8, padding: '10px 20px', borderRadius: 8, fontSize: 14, fontWeight: 500 }}>
-            Import Backup
-            <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
-          </label>
-          <button style={styles.buttonSecondary} onClick={handleLock}>Lock App</button>
-        </div>
+          </div>
+        )}
 
         {!isOnline && (
           <div style={styles.offlineBanner}>
@@ -621,7 +600,7 @@ export default function App() {
 
         <div style={styles.header}>
           <h1 style={styles.title}>Dusk</h1>
-          <p style={styles.subtitle}>Your private journal</p>
+          <p style={styles.subtitle}>King's Household</p>
         </div>
 
         <div style={styles.tabs}>
@@ -663,7 +642,6 @@ export default function App() {
                   padding: 0,
                   lineHeight: 1
                 }}
-                aria-label="Clear search"
               >
                 ×
               </button>
@@ -695,7 +673,7 @@ export default function App() {
               <div style={{ marginBottom: 12 }}>
                 <input
                   style={styles.input}
-                  placeholder="Add tags... type and press Enter. e.g. Visions"
+                  placeholder="Add tags... type and press Enter"
                   value={tagInput}
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag(tagInput))}
@@ -708,7 +686,7 @@ export default function App() {
                   <div style={{ marginTop: 8 }}>
                     {tags.map(t => (
                       <span key={t} style={styles.tag}>
-                        #{t} <span style={{ cursor: 'pointer' }} onClick={() => removeTag(t)}>×</span>
+                        #{t} <span style={styles.tagRemove} onClick={() => removeTag(t)}>×</span>
                       </span>
                     ))}
                   </div>
@@ -728,7 +706,7 @@ export default function App() {
                   <span style={{ fontSize: 12, color: isDark? '#d4d4d0' : '#9d174d' }}>Saving...</span>
                 )}
                 {saveStatus === 'saved' && (
-                  <span style={{ fontSize: 12, color: '#16a34a' }}>
+                  <span style={styles.saveIndicator}>
                     Draft saved • {saveTime}
                   </span>
                 )}
@@ -740,7 +718,6 @@ export default function App() {
                       setTitle('');
                       setContent('');
                       setTags([]);
-                      setCurrentDraftId(null);
                       setSaveStatus('');
                     }}
                   >
@@ -783,11 +760,6 @@ export default function App() {
 
         {view === 'archive' && (
           <>
-            {archivedEntries.length > 0 && (
-              <button style={{...styles.button, marginBottom: 20 }} onClick={exportAllPDF}>
-                Export All as PDF
-              </button>
-            )}
             {archivedEntries.length === 0? (
               <p style={{ textAlign: 'center', color: isDark? '#a0a0a0' : '#6b7280' }}>
                 {searchQuery? 'No archived entries match your search' : 'No archived entries yet'}
@@ -795,10 +767,7 @@ export default function App() {
             ) : (
               archivedEntries.map(entry => (
                 <div key={entry.id} style={styles.entry}>
-                  <h3
-                    style={styles.entryTitle}
-                    onClick={() => openEntryView(entry)}
-                  >
+                  <h3 style={styles.entryTitle} onClick={() => setSelectedEntry(entry)}>
                     {entry.title}
                   </h3>
                   {entry.tags?.length > 0 && (
@@ -827,10 +796,40 @@ export default function App() {
             Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
           </p>
           <p style={{ fontSize: 12, color: isDark? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-            v3.0 • Pastor Julius Ugorji | TKH | forteido@gmail.com
+            v3.1 • Pastor Julius Ugorji | TKH | forteido@gmail.com
           </p>
         </div>
       </div>
+
+      {showSettings && (
+        <div style={styles.modalOverlay} onClick={() => setShowSettings(false)}>
+          <div style={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Settings</h2>
+              <button onClick={() => setShowSettings(false)} style={{ fontSize: 24, background: 'none', border: 'none', cursor: 'pointer', color: isDark? '#f5f5f0' : '#000' }}>×</button>
+            </div>
+            <button style={styles.modalButton} onClick={() => { setIsDark(!isDark); setShowSettings(false); }}>
+              {isDark? '☀️ Light Mode' : '🌙 Night Mode'}
+            </button>
+            <button style={styles.modalButton} onClick={requestNotificationPermission}>
+              ⏰ {Notification.permission === 'granted'? 'Reminder On' : 'Enable 7pm Reminder'}
+            </button>
+            <button style={styles.modalButton} onClick={exportAllPDF}>
+              📄 Export All as PDF
+            </button>
+            <button style={styles.modalButton} onClick={exportJSON}>
+              💾 Export JSON
+            </button>
+            <label style={{...styles.modalButton, display: 'block', cursor: 'pointer' }}>
+              📤 Import Backup
+              <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
+            </label>
+            <button style={{...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
+              🔒 Lock App
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dusk-v3.6';
+const CACHE_NAME = 'dusk-v4.1';
 const urlsToCache = [
   '/',
   '/index.html',

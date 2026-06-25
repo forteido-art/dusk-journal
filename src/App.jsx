@@ -29,6 +29,19 @@ const getStyles = (isDark) => ({
     fontWeight: 500,
     zIndex: 10
   },
+  searchIconBtn: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    padding: '8px 12px',
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
+    color: isDark ? '#f5f5f0' : '#be185d',
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontSize: 16,
+    zIndex: 10
+  },
   header: {
     textAlign: 'center',
     marginBottom: 40,
@@ -72,6 +85,32 @@ const getStyles = (isDark) => ({
     border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
     marginBottom: 30
   },
+  // Clickable preview entry box styling
+  formPlaceholderCard: {
+    backgroundColor: isDark ? '#2a2a2a' : '#fff',
+    padding: '24px 20px',
+    borderRadius: 12,
+    border: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`,
+    marginBottom: 30,
+    cursor: 'pointer',
+    textAlign: 'center',
+    color: isDark ? '#a0a0a0' : '#6b7280',
+    fontSize: 16,
+    fontWeight: 500,
+    transition: 'transform 0.1s',
+    borderStyle: 'dashed'
+  },
+  fullScreenModal: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: isDark ? '#1a1a1a' : '#fdf2f8',
+    zIndex: 100,
+    padding: '40px 20px',
+    overflowY: 'auto'
+  },
   input: {
     width: '100%',
     padding: 12,
@@ -89,7 +128,7 @@ const getStyles = (isDark) => ({
     fontSize: 16,
     border: `1px solid ${isDark ? '#404040' : '#f9a8d4'}`,
     borderRadius: 8,
-    minHeight: 120,
+    minHeight: 250, // Expanded for full screen view
     boxSizing: 'border-box',
     fontFamily: 'inherit',
     backgroundColor: isDark ? '#1a1a1a' : '#fff',
@@ -125,7 +164,8 @@ const getStyles = (isDark) => ({
     fontWeight: 600,
     margin: '0 0 8px 0',
     color: isDark ? '#f5f5f0' : '#be185d',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    textTransform: 'uppercase' // Forces uppercase on entry titles
   },
   entryContent: {
     fontSize: 14,
@@ -253,10 +293,11 @@ const getStyles = (isDark) => ({
   clickableTitle: {
     fontSize: 15,
     fontWeight: 500,
-    color: isDark ? '#e0e0e0' : '#374151',
+    color: isDark ? '#3b82f6' : '#2563eb', // Force blue color
+    textTransform: 'uppercase', // Force capital letters
     cursor: 'pointer',
     padding: '4px 0',
-    transition: 'color 0.2s',
+    transition: 'color 0.2s'
   }
 });
 
@@ -273,7 +314,7 @@ export default function App() {
   const [tagInput, setTagInput] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [currentDraftId, setCurrentDraftId] = useState(null);
-  const [view, setView] = useState('journal');
+  const [view, setView] = useState('journal'); // 'journal', 'archive', 'entry', 'search'
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [searchQuery, setSearchQuery] = useState('');
@@ -281,23 +322,32 @@ export default function App() {
   const [customTags, setCustomTags] = useState(['Visions', 'Bible Study', 'Work', 'Family']);
   const [saveStatus, setSaveStatus] = useState('');
   const [saveTime, setSaveTime] = useState('');
-  const [isLocked, setIsLocked] = useState(true);
+  
+  // App lock configurations
+  const [isAppLockDisabled, setIsAppLockDisabled] = useState(() => {
+    return localStorage.getItem('dusk-lock-disabled') === 'true';
+  });
+  const [isLocked, setIsLocked] = useState(!isAppLockDisabled);
   const [pinInput, setPinInput] = useState('');
+  
   const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
   const [swRegistration, setSwRegistration] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
+
   const [expandedFolders, setExpandedFolders] = useState({});
 
   const storedPin = localStorage.getItem('dusk-pin');
 
   // Unified Lock Function (Keeps data in memory)
   const handleLock = useCallback(() => {
+    if (isAppLockDisabled) return;
     setIsLocked(true);
     setView('journal');
     setSelectedEntry(null);
     setShowSettings(false);
-  }, []);
+    setIsEditorOpen(false);
+  }, [isAppLockDisabled]);
 
   // Auto-lock on exit, minimize, or screen sleep
   useEffect(() => {
@@ -319,6 +369,13 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('dusk-theme', isDark ? 'dark' : 'light');
   }, [isDark]);
+
+  useEffect(() => {
+    localStorage.setItem('dusk-lock-disabled', isAppLockDisabled ? 'true' : 'false');
+    if (isAppLockDisabled) {
+      setIsLocked(false);
+    }
+  }, [isAppLockDisabled]);
 
   useEffect(() => {
     if (!isLocked) {
@@ -434,6 +491,7 @@ export default function App() {
       setEditingId(null);
       setCurrentDraftId(null);
       setSaveStatus('');
+      setIsEditorOpen(false);
     }
   }, [title, content, tags, editingId, currentDraftId]);
 
@@ -484,6 +542,7 @@ export default function App() {
     setCurrentDraftId(null);
     setView('journal');
     setSelectedEntry(null);
+    setIsEditorOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -665,6 +724,9 @@ export default function App() {
           <button style={styles.modalButton} onClick={requestNotificationPermission}>
             {Notification.permission === 'granted' ? '⏰ Reminder On' : '⏰ Enable 7pm Reminder'}
           </button>
+          <button style={styles.modalButton} onClick={() => { setIsAppLockDisabled(!isAppLockDisabled); setShowSettings(false); }}>
+            {isAppLockDisabled ? '🔓 Enable App Lock PIN' : '🔏 Disable App Lock PIN'}
+          </button>
           <button style={styles.modalButton} onClick={exportAllPDF}>
             📄 Export All as PDF
           </button>
@@ -675,9 +737,11 @@ export default function App() {
             📤 Import Backup
             <input type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
           </label>
-          <button style={{ ...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
-            🔒 Lock App
-          </button>
+          {!isAppLockDisabled && (
+            <button style={{ ...styles.modalButton, color: '#ef4444' }} onClick={handleLock}>
+              🔒 Lock App
+            </button>
+          )}
         </div>
       </div>
     )
@@ -689,12 +753,12 @@ export default function App() {
         Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
       </p>
       <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-        v4.0 • Prophetic Services holds on Tuesdays 5pm.
+        v4.1 • Support us: Fidelity Bank Acct No: 5600970811 - WHITE HORSE
       </p>
     </div>
   );
 
-  if (isLocked) {
+  if (isLocked && !isAppLockDisabled) {
     return (
       <div style={styles.lockScreen}>
         <div style={styles.lockBox}>
@@ -718,6 +782,94 @@ export default function App() {
           <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 16 }}>
             PIN is stored locally on your device only
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- EXCLUSIVE FULL SCREEN SEARCH VIEW ---
+  if (view === 'search') {
+    return (
+      <div style={styles.container}>
+        <div style={styles.wrapper}>
+          <button style={styles.settingsBtn} onClick={() => { setView('journal'); setSearchQuery(''); }}>
+            ↩ Back
+          </button>
+          <div style={styles.header}>
+            <h1 style={styles.title}>Search</h1>
+            <p style={styles.subtitle}>Find your items</p>
+          </div>
+
+          <div style={{ marginBottom: 20, display: 'flex', gap: 8 }}>
+            <div style={{ flex: 1, position: 'relative' }}>
+              <input
+                style={{ ...styles.input, marginBottom: 0, paddingRight: 40 }}
+                placeholder="Search by date, title, tags, or any word..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                autoFocus
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  style={{
+                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', fontSize: 18,
+                    color: isDark ? '#f5f5f0' : '#9d174d', cursor: 'pointer', padding: 0, lineHeight: 1
+                  }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+            <button
+              style={{ ...styles.buttonSecondary, marginTop: 0 }}
+              onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+            >
+              {sortOrder === 'newest' ? 'Newest' : 'Oldest'}
+            </button>
+          </div>
+
+          {searchQuery && (
+            <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#6b7280', marginTop: -12, marginBottom: 12 }}>
+              Found {filteredEntries.length} entries matches
+            </p>
+          )}
+
+          <div>
+            {filteredEntries.length === 0 ? (
+              <p style={{ textAlign: 'center', color: isDark ? '#a0a0a0' : '#6b7280' }}>
+                No matching entries found.
+              </p>
+            ) : (
+              filteredEntries.map(entry => (
+                <div key={entry.id} style={styles.entry}>
+                  <h3 style={{ ...styles.entryTitle, color: entry.archived ? (isDark ? '#3b82f6' : '#2563eb') : (isDark ? '#f5f5f0' : '#be185d') }}>
+                    {entry.title || "UNTITLED ENTRY"}
+                  </h3>
+                  {entry.tags?.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      {entry.tags.map(t => (
+                        <span key={t} style={styles.tag}>#{t}</span>
+                      ))}
+                    </div>
+                  )}
+                  <p style={styles.entryContent}>{entry.content}</p>
+                  <p style={styles.entryDate}>
+                    {new Date(entry.created).toLocaleDateString()} {entry.archived && " (Archived)"}
+                  </p>
+                  <div style={styles.entryActions}>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => handleEdit(entry)}>Edit</button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => toggleArchive(entry.id)}>
+                      {entry.archived ? "Unarchive" : "Archive"}
+                    </button>
+                    <button style={{ ...styles.button, ...styles.buttonSecondary }} onClick={() => handleDelete(entry.id)}>Delete</button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          {renderFooter()}
         </div>
       </div>
     );
@@ -759,12 +911,16 @@ export default function App() {
   return (
     <div style={styles.container}>
       <div style={styles.wrapper}>
+        {/* Clickable Search Icon */}
+        <button style={styles.searchIconBtn} onClick={() => setView('search')} title="Open Search Page">
+          🔍 Search
+        </button>
         <button style={styles.settingsBtn} onClick={() => setShowSettings(true)}>
           ⚙️ Settings
         </button>
 
         {swUpdateAvailable && (
-          <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div style={{ textAlign: 'center', marginBottom: 20, paddingTop: 20 }}>
             <button
               style={{ ...styles.button, backgroundColor: '#16a34a', marginTop: 0 }}
               onClick={() => {
@@ -780,7 +936,7 @@ export default function App() {
         )}
 
         {!isOnline && (
-          <div style={styles.offlineBanner}>
+          <div style={{ ...styles.offlineBanner, marginTop: 20 }}>
             No network. Please turn on your data
           </div>
         )}
@@ -809,118 +965,96 @@ export default function App() {
           </button>
         </div>
 
-        <div style={{ marginBottom: 20, display: 'flex', gap: 8 }}>
-          <div style={{ flex: 1, position: 'relative' }}>
-            <input
-              style={{ ...styles.input, marginBottom: 0, paddingRight: 40 }}
-              placeholder="Search by date, title, tags, or any word..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                style={{
-                  position: 'absolute',
-                  right: 12,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  fontSize: 18,
-                  color: isDark ? '#f5f5f0' : '#9d174d',
-                  cursor: 'pointer',
-                  padding: 0,
-                  lineHeight: 1
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-          <button
-            style={{ ...styles.buttonSecondary, marginTop: 0 }}
-            onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
-          >
-            {sortOrder === 'newest' ? 'Newest' : 'Oldest'}
-          </button>
-        </div>
-
-        {searchQuery && (
-          <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#6b7280', marginTop: -12, marginBottom: 12 }}>
-            Found {journalEntries.length + archivedEntries.length} entries
-          </p>
-        )}
-
         {view === 'journal' && (
           <>
-            <div style={styles.form}>
-              <input
-                style={styles.input}
-                placeholder="Title"
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-              />
-              <div style={{ marginBottom: 12 }}>
-                <input
-                  style={styles.input}
-                  placeholder="Add tags... type and press Enter"
-                  value={tagInput}
-                  onChange={e => setTagInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag(tagInput))}
-                  list="tag-list"
-                />
-                <datalist id="tag-list">
-                  {customTags.map(t => <option key={t} value={t} />)}
-                </datalist>
-                {tags.length > 0 && (
-                  <div style={{ marginTop: 8 }}>
-                    {tags.map(t => (
-                      <span key={t} style={styles.tag}>
-                        #{t} <span style={styles.tagRemove} onClick={() => removeTag(t)}>×</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <textarea
-                style={styles.textarea}
-                placeholder="Write your thoughts..."
-                value={content}
-                onChange={e => setContent(e.target.value)}
-              />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-                <button style={styles.button} onClick={() => handleSave(false)}>
-                  {editingId ? 'Update Entry' : 'Save Entry'}
-                </button>
-                {saveStatus === 'saving' && (
-                  <span style={{ fontSize: 12, color: isDark ? '#d4d4d0' : '#9d174d' }}>Saving...</span>
-                )}
-                {saveStatus === 'saved' && (
-                  <span style={styles.saveIndicator}>
-                    Draft saved • {saveTime}
-                  </span>
-                )}
-                {editingId && (
-                  <button
-                    style={{ ...styles.button, ...styles.buttonSecondary }}
-                    onClick={() => {
-                      setEditingId(null);
-                      setTitle('');
-                      setContent('');
-                      setTags([]);
-                      setSaveStatus('');
-                    }}
-                  >
-                    Cancel
-                  </button>
-                )}
-              </div>
+            {/* Clickable box triggering Full-Screen Input view */}
+            <div style={styles.formPlaceholderCard} onClick={() => setIsEditorOpen(true)}>
+              📝 {editingId ? "CONTINUE EDITING: " + (title || "Untitled") : "WRITE YOUR THOUGHTS (CLICK TO EXPAND)..."}
             </div>
+
+            {/* FULL SCREEN DEDICATED JOURNAL WRITING PAGE */}
+            {isEditorOpen && (
+              <div style={styles.fullScreenModal}>
+                <div style={styles.wrapper}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                    <h2 style={{ ...styles.title, fontSize: 24 }}>{editingId ? 'Edit Entry' : 'New Entry'}</h2>
+                    <button 
+                      onClick={() => setIsEditorOpen(false)} 
+                      style={{ fontSize: 28, background: 'none', border: 'none', cursor: 'pointer', color: isDark ? '#f5f5f0' : '#000' }}
+                    >
+                      ×
+                    </button>
+                  </div>
+
+                  <div style={styles.form}>
+                    <input
+                      style={styles.input}
+                      placeholder="Title"
+                      value={title}
+                      onChange={e => setTitle(e.target.value)}
+                    />
+                    <div style={{ marginBottom: 12 }}>
+                      <input
+                        style={styles.input}
+                        placeholder="Add tags... type and press Enter"
+                        value={tagInput}
+                        onChange={e => setTagInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addTag(tagInput))}
+                        list="tag-list"
+                      />
+                      <datalist id="tag-list">
+                        {customTags.map(t => <option key={t} value={t} />)}
+                      </datalist>
+                      {tags.length > 0 && (
+                        <div style={{ marginTop: 8 }}>
+                          {tags.map(t => (
+                            <span key={t} style={styles.tag}>
+                              #{t} <span style={styles.tagRemove} onClick={() => removeTag(t)}>×</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <textarea
+                      style={styles.textarea}
+                      placeholder="Write your thoughts..."
+                      value={content}
+                      onChange={e => setContent(e.target.value)}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
+                      <button style={styles.button} onClick={() => handleSave(false)}>
+                        {editingId ? 'Update Entry' : 'Save Entry'}
+                      </button>
+                      {saveStatus === 'saving' && (
+                        <span style={{ fontSize: 12, color: isDark ? '#d4d4d0' : '#9d174d' }}>Saving...</span>
+                      )}
+                      {saveStatus === 'saved' && (
+                        <span style={styles.saveIndicator}>
+                          Draft saved • {saveTime}
+                        </span>
+                      )}
+                      <button
+                        style={{ ...styles.button, ...styles.buttonSecondary }}
+                        onClick={() => {
+                          setEditingId(null);
+                          setTitle('');
+                          setContent('');
+                          setTags([]);
+                          setSaveStatus('');
+                          setIsEditorOpen(false);
+                        }}
+                      >
+                        Cancel / Clear
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {journalEntries.length === 0 ? (
               <p style={{ textAlign: 'center', color: isDark ? '#a0a0a0' : '#6b7280' }}>
-                {searchQuery ? 'No entries match your search' : 'No entries yet. Write your first one!'}
+                No entries yet. Write your first one!
               </p>
             ) : (
               journalEntries.map(entry => (
@@ -953,7 +1087,7 @@ export default function App() {
           <>
             {archivedFolders.length === 0 ? (
               <p style={{ textAlign: 'center', color: isDark ? '#a0a0a0' : '#6b7280' }}>
-                {searchQuery ? 'No archived entries match your search' : 'No archived entries yet'}
+                No archived entries yet
               </p>
             ) : (
               archivedFolders.map(folder => {
@@ -967,12 +1101,12 @@ export default function App() {
                     {isOpen && (
                       <div style={styles.folderContent}>
                         {folder.entries.map(entry => (
-                          <div 
-                            key={entry.id} 
+                          <div
+                            key={entry.id}
                             style={styles.clickableTitle}
                             onClick={() => openEntryView(entry)}
                           >
-                            • {entry.title || "Untitled Entry"}
+                            • {entry.title || "UNTITLED ENTRY"}
                           </div>
                         ))}
                       </div>

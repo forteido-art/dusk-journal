@@ -750,10 +750,10 @@ export default function App() {
   const renderFooter = () => (
     <div style={{ borderTop: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
       <p style={{ fontSize: 14, color: isDark ? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
-        Dusk Journal • A KING'S HOUSEHOLD CHURCH APP
+        Dusk Journal • A KING'S HOUSEHOLD APP
       </p>
       <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-        v4.2 • Support us: Fidelity Bank Acct No: 5600970811 - WHITE HORSE
+        v4.3 • Support us: Fidelity Bank Acct No: 5600970811 - WHITE HORSE
       </p>
     </div>
   );
@@ -937,7 +937,7 @@ export default function App() {
 
         {!isOnline && (
           <div style={{ ...styles.offlineBanner, marginTop: 20 }}>
-            No network. Please turn on your data
+                 Data off
           </div>
         )}
 

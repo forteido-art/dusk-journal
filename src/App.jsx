@@ -750,10 +750,10 @@ export default function App() {
   const renderFooter = () => (
     <div style={{ borderTop: `1px solid ${isDark ? '#404040' : '#fbcfe8'}`, marginTop: 40, paddingTop: 16, paddingBottom: 24, textAlign: 'center' }}>
       <p style={{ fontSize: 14, color: isDark ? '#f5f5f0' : '#be185d', fontWeight: 500, margin: 0 }}>
-        Dusk Journal • THE KING'S HOUSEHOLD MEDIA UNIT
+        Dusk Journal • A KING'S HOUSEHOLD CHURCH APP
       </p>
       <p style={{ fontSize: 12, color: isDark ? '#a0a0a0' : '#9d174d', marginTop: 4 }}>
-        v4.1 • Support us: Fidelity Bank Acct No: 5600970811 - WHITE HORSE
+        v4.2 • Support us: Fidelity Bank Acct No: 5600970811 - WHITE HORSE
       </p>
     </div>
   );
@@ -943,7 +943,7 @@ export default function App() {
 
         <div style={styles.header}>
           <h1 style={styles.title}>Dusk</h1>
-          <p style={styles.subtitle}>King's Household</p>
+          <p style={styles.subtitle}>Your Personal Note Pad</p>
         </div>
 
         <div style={styles.tabs}>
@@ -1054,7 +1054,7 @@ export default function App() {
 
             {journalEntries.length === 0 ? (
               <p style={{ textAlign: 'center', color: isDark ? '#a0a0a0' : '#6b7280' }}>
-                No entries yet. Write your first one!
+                Write something! Auto-save is on.
               </p>
             ) : (
               journalEntries.map(entry => (
